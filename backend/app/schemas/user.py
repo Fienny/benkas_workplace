@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from app.models.user import UserRole
 
@@ -8,7 +8,7 @@ from app.models.user import UserRole
 class UserResponse(BaseModel):
     id: int
     full_name: str
-    email: EmailStr
+    email: str  # plain str — email field doubles as username, no format enforcement
     role: UserRole
     is_active: bool
     created_at: datetime
