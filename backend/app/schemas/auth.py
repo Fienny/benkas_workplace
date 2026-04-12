@@ -4,7 +4,7 @@ from app.models.user import UserRole
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str  # plain str — email-validator rejects .local TLDs; DB lookup handles it
     password: str = Field(min_length=6)
 
 
