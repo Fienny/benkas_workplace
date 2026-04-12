@@ -55,7 +55,7 @@ export function LoginPage({ onLogin }: Props) {
               type="text"
               value={email}
               onChange={(e) => { setEmail(e.target.value); setError(null) }}
-              placeholder="admin@benka.local"
+              placeholder="admin"
               autoComplete="email"
               required
             />
@@ -81,7 +81,7 @@ export function LoginPage({ onLogin }: Props) {
         </form>
 
         <p className="login-hint">
-          Default accounts: <code>admin@benka.local</code> / <code>Admin123!</code>
+          Default: <code>admin</code> / <code>admin</code>
         </p>
       </div>
     </div>

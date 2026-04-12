@@ -20,5 +20,5 @@ export async function deleteFile(fileId: number): Promise<void> {
 }
 
 export function downloadUrl(fileId: number): string {
-  return `http://localhost:8000/api/v1/files/${fileId}/download`
+  return `/api/v1/files/${fileId}/download`
 }

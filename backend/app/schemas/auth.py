@@ -4,8 +4,8 @@ from app.models.user import UserRole
 
 
 class LoginRequest(BaseModel):
-    email: str  # plain str — email-validator rejects .local TLDs; DB lookup handles it
-    password: str = Field(min_length=6)
+    email: str
+    password: str  # no length check on login — DB lookup validates credentials
 
 
 class TokenResponse(BaseModel):
