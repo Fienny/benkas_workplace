@@ -48,15 +48,20 @@ button { cursor: pointer; font-family: inherit; }
 .nav-item:hover:not(.active) { background: #f3f4f6; }
 
 .user-card {
-  padding-top: 16px; border-top: 1px solid #e5e7eb;
-  display: flex; gap: 10px; align-items: center;
+  display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0;
 }
+.user-info { min-width: 0; }
+.sidebar-bottom {
+  padding-top: 16px; border-top: 1px solid #e5e7eb;
+  display: flex; align-items: center; gap: 8px;
+}
+.logout-btn { flex-shrink: 0; }
 .avatar {
   width: 36px; height: 36px; border-radius: 999px; background: #1d4ed8; color: #fff;
   display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
   flex-shrink: 0;
 }
-.user-name { font-weight: 600; font-size: 13px; }
+.user-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .user-role { color: #6b7280; font-size: 12px; }
 
 /* ── Content ────────────────────────────────────────── */
@@ -294,6 +299,26 @@ tr:hover td { background: #fafafa; }
 .form-actions {
   display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px;
 }
+
+/* ── Login page ─────────────────────────────────────── */
+.login-shell {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: #f5f7fb; padding: 24px;
+}
+.login-card {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 20px;
+  padding: 36px; width: 100%; max-width: 380px;
+  display: flex; flex-direction: column; gap: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+.login-brand { display: flex; gap: 12px; align-items: center; }
+.login-heading { margin: 0; font-size: 22px; font-weight: 700; color: #111827; }
+.login-form { display: flex; flex-direction: column; gap: 14px; }
+.login-btn { width: 100%; justify-content: center; padding: 11px; font-size: 15px; }
+.login-hint {
+  margin: 0; font-size: 12px; color: #9ca3af; text-align: center; line-height: 1.8;
+}
+.login-hint code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; font-size: 11px; }
 
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 1400px) {

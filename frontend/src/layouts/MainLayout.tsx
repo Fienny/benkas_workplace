@@ -1,9 +1,14 @@
-import { FolderKanban, LayoutDashboard, Shield } from 'lucide-react'
+import { FolderKanban, LayoutDashboard, LogOut, Shield } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { ReactNode } from 'react'
 import { useUser } from '../contexts'
 
-export function MainLayout({ children }: { children: ReactNode }) {
+interface Props {
+  children: ReactNode
+  onLogout: () => void
+}
+
+export function MainLayout({ children, onLogout }: Props) {
   const { user } = useUser()
 
   const initials = user
@@ -37,12 +42,17 @@ export function MainLayout({ children }: { children: ReactNode }) {
           </nav>
         </div>
 
-        <div className="user-card">
-          <div className="avatar">{initials}</div>
-          <div>
-            <div className="user-name">{user?.full_name ?? '—'}</div>
-            <div className="user-role">{user?.role === 'admin' ? 'Administrator' : 'Engineer'}</div>
+        <div className="sidebar-bottom">
+          <div className="user-card">
+            <div className="avatar">{initials}</div>
+            <div className="user-info">
+              <div className="user-name">{user?.full_name ?? '—'}</div>
+              <div className="user-role">{user?.role === 'admin' ? 'Administrator' : 'Engineer'}</div>
+            </div>
           </div>
+          <button className="icon-btn logout-btn" onClick={onLogout} title="Sign out">
+            <LogOut size={16} />
+          </button>
         </div>
       </aside>
 
