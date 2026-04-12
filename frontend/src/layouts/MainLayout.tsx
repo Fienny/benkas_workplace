@@ -1,8 +1,15 @@
-import { BarChart3, FolderKanban, LayoutDashboard, Shield } from 'lucide-react'
+import { FolderKanban, LayoutDashboard, Shield } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { ReactNode } from 'react'
+import { useUser } from '../App'
 
 export function MainLayout({ children }: { children: ReactNode }) {
+  const { user } = useUser()
+
+  const initials = user
+    ? user.full_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+    : '?'
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -15,20 +22,26 @@ export function MainLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <input className="search-box" placeholder="Search projects..." />
-
           <nav className="nav-menu">
-            <NavLink to="/" className="nav-item"><LayoutDashboard size={18} /> Dashboard</NavLink>
-            <NavLink to="/projects" className="nav-item"><FolderKanban size={18} /> Projects</NavLink>
-            <a className="nav-item" href="#"><Shield size={18} /> Admin Panel</a>
+            <NavLink to="/" end className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+              <LayoutDashboard size={18} /> Dashboard
+            </NavLink>
+            <NavLink to="/projects" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+              <FolderKanban size={18} /> Projects
+            </NavLink>
+            {user?.role === 'admin' && (
+              <a className="nav-item" href="#">
+                <Shield size={18} /> Admin Panel
+              </a>
+            )}
           </nav>
         </div>
 
         <div className="user-card">
-          <div className="avatar">AB</div>
+          <div className="avatar">{initials}</div>
           <div>
-            <div className="user-name">Admin Benka</div>
-            <div className="user-role">Admin</div>
+            <div className="user-name">{user?.full_name ?? '—'}</div>
+            <div className="user-role">{user?.role === 'admin' ? 'Administrator' : 'Engineer'}</div>
           </div>
         </div>
       </aside>

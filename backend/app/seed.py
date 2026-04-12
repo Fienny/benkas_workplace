@@ -11,10 +11,10 @@ def run() -> None:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        if not db.scalar(select(User).where(User.email == 'admin@gmail.com')):
+        if not db.scalar(select(User).where(User.email == 'admin@benka.local')):
             admin = User(
                 full_name='Admin Benka',
-                email='admin@gmail.com',
+                email='admin@benka.local',
                 password_hash=hash_password('Admin123!'),
                 role=UserRole.admin,
             )

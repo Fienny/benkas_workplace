@@ -24,3 +24,24 @@ export type Project = {
   created_at: string
   file_count: number
 }
+
+export type ProjectFile = {
+  id: number
+  project_id: number
+  uploaded_by: number
+  original_name: string
+  stored_name: string
+  content_type: string | null
+  file_size: number
+  file_path: string
+  created_at: string
+}
+
+export type User = {
+  id: number
+  full_name: string
+  email: string
+  role: 'admin' | 'user'
+  is_active: boolean
+  created_at: string
+}

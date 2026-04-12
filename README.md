@@ -1,64 +1,113 @@
-# Benka Workbench MVP
+# Benka's Workbench
 
-Быстрый MVP под заказчика: FastAPI + PostgreSQL + React/Vite dashboard.
+Engineering project dashboard — track project status, progress, and file attachments.
 
-## Что уже есть
-- JWT-авторизация
-- Роли `admin` / `user`
-- CRUD проектов
-- Загрузка, скачивание и удаление файлов по проектам
-- Dashboard API со сводной статистикой
-- React frontend в стиле прикрепленного дашборда
-- Seed с тестовыми пользователями и проектами
+## Stack
 
-## Структура
-- `backend/` — FastAPI + SQLAlchemy
-- `frontend/` — React + Vite + Recharts
-- `docker-compose.yml` — Postgres + backend
+| Layer     | Technology                           |
+|-----------|--------------------------------------|
+| Frontend  | React 18, TypeScript, Vite, Recharts |
+| Backend   | FastAPI, SQLAlchemy 2, Pydantic      |
+| Auth      | JWT (HS256), bcrypt                  |
+| Database  | PostgreSQL 16                        |
+| Container | Docker, Docker Compose               |
 
-## Быстрый запуск
+## Features
 
-### 1. Backend
+- Dashboard with 6 KPI cards and 4 charts (pie, bar, line, horizontal bar)
+- Projects table with color-coded status chips and visual progress bars
+- File management per project — upload, download, delete via modal
+- JWT-protected API with role-based access (admin / user)
+- Sidebar shows real logged-in user with correct initials and role
+
+## Quick Start
+
+See [`deploy_local.md`](./deploy_local.md) for the full local dev setup.
+
+**Short version:**
 ```bash
+# 1. Start the database
+docker compose up -d db
+
+# 2. Backend
 cd backend
-cp .env.example .env
+cp .env.example .env          # update SECRET_KEY before production
 pip install -r requirements.txt
-python -m app.seed
-uvicorn app.main:app --reload --port 8000
-OR
-python -m uvicorn app.main:app --reload --port 8000
-```
+python -m app.seed            # creates demo users + 8 sample projects
+uvicorn app.main:app --reload
 
-### 2. Frontend
-```bash
-cd frontend
+# 3. Frontend (separate terminal)
+cd ../frontend
 npm install
 npm run dev
 ```
 
-### 3. Demo access
-Frontend автоматически логинится под seed-admin:
-- email: `admin@benka.local`
-- password: `Admin123!`
+Open [http://localhost:3000](http://localhost:3000) — the app auto-logs in as `admin@benka.local`.
 
-## Ключевые endpoints
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/login`
-- `GET /api/v1/users/me`
-- `GET /api/v1/projects`
-- `POST /api/v1/projects`
-- `PATCH /api/v1/projects/{id}`
-- `DELETE /api/v1/projects/{id}`
-- `GET /api/v1/files/project/{project_id}`
-- `POST /api/v1/files/project/{project_id}`
-- `GET /api/v1/files/{file_id}/download`
-- `DELETE /api/v1/files/{file_id}`
-- `GET /api/v1/dashboard`
+## Seed Credentials
 
-## Что я бы доделал следующим шагом
-1. Alembic миграции вместо `create_all`
-2. S3/MinIO вместо локального storage
-3. Отдельная таблица project_members
-4. Audit log по действиям пользователей
-5. Настоящая login page и admin UI
-6. Nginx + docker compose для полного деплоя
+| Role  | Email             | Password  |
+|-------|-------------------|-----------|
+| Admin | admin@benka.local | Admin123! |
+| User  | user@benka.local  | User123!  |
+
+## API Docs
+
+Interactive Swagger UI at [http://localhost:8000/docs](http://localhost:8000/docs)
+
+## Key Endpoints
+
+```
+POST   /api/v1/auth/login
+POST   /api/v1/auth/register
+GET    /api/v1/users/me
+
+GET    /api/v1/projects
+POST   /api/v1/projects           (admin)
+PATCH  /api/v1/projects/{id}      (admin)
+DELETE /api/v1/projects/{id}      (admin)
+
+GET    /api/v1/files/project/{id}
+POST   /api/v1/files/project/{id}
+GET    /api/v1/files/{id}/download
+DELETE /api/v1/files/{id}
+
+GET    /api/v1/dashboard
+GET    /health
+```
+
+## Project Structure
+
+```
+benkas_worplace/
+├── backend/
+│   └── app/
+│       ├── api/          # Route handlers
+│       ├── core/         # Config, JWT security
+│       ├── db/           # SQLAlchemy engine & session
+│       ├── models/       # User, Project, ProjectFile
+│       ├── schemas/      # Pydantic request/response models
+│       ├── services/     # Local file storage
+│       └── seed.py       # Demo data seeder
+├── frontend/
+│   └── src/
+│       ├── api/          # Axios wrappers (auth, projects, files, users)
+│       ├── components/   # StatCard, ChartCard, ProjectTable, FileManager
+│       ├── layouts/      # MainLayout (sidebar + content shell)
+│       ├── pages/        # DashboardPage, ProjectsPage
+│       ├── styles/       # global.css
+│       └── types/        # TypeScript interfaces
+├── docker-compose.yml
+├── CLAUDE.md             # Agent session log
+├── deploy_local.md
+└── deploy_server.md
+```
+
+## Next Steps (backlog)
+
+1. Alembic migrations instead of `create_all`
+2. S3 / MinIO storage instead of local filesystem
+3. Login page (remove auto-login)
+4. Admin UI: create/edit/delete projects from the browser
+5. Nginx + full Docker Compose for production
+6. Audit log table for user actions
