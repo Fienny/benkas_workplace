@@ -1,15 +1,12 @@
 import { Route, Routes } from 'react-router-dom'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MainLayout } from './layouts/MainLayout'
 import { DashboardPage } from './pages/DashboardPage'
 import { ProjectsPage } from './pages/ProjectsPage'
 import { loginDemo } from './api/auth'
 import { fetchMe } from './api/users'
+import { UserContext } from './contexts'
 import { User } from './types'
-
-type UserContextType = { user: User | null }
-export const UserContext = createContext<UserContextType>({ user: null })
-export const useUser = () => useContext(UserContext)
 
 export default function App() {
   const [ready, setReady] = useState(false)
@@ -17,7 +14,7 @@ export default function App() {
 
   useEffect(() => {
     async function bootstrap() {
-      let token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('access_token')
       if (!token) {
         await loginDemo()
       }
@@ -25,7 +22,7 @@ export default function App() {
         const me = await fetchMe()
         setUser(me)
       } catch {
-        // token stale – re-login
+        // stale token — re-login
         await loginDemo()
         const me = await fetchMe()
         setUser(me)

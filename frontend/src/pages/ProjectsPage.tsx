@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
-import { Paperclip } from 'lucide-react'
+import { Paperclip, Pencil, Plus } from 'lucide-react'
 import { fetchProjects } from '../api/projects'
 import { Project } from '../types'
-import { ProjectTable } from '../components/ProjectTable'
 import { FileManager } from '../components/FileManager'
+import { ProjectFormModal } from '../components/ProjectFormModal'
+
+const STATUS_LABEL: Record<string, string> = { active: 'Active', completed: 'Completed', draft: 'Draft' }
+const progressColor = (v: number) => v >= 80 ? '#20bf6b' : v >= 40 ? '#3867d6' : '#f0932b'
 
 export function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [fileProject, setFileProject] = useState<Project | null>(null)
+  const [formProject, setFormProject] = useState<Project | 'new' | null>(null)
 
   useEffect(() => {
     fetchProjects().then(setProjects).catch(() => setProjects([]))
@@ -19,13 +23,29 @@ export function ProjectsPage() {
     )
   }
 
+  function handleSaved(saved: Project) {
+    setProjects((prev) => {
+      const idx = prev.findIndex((p) => p.id === saved.id)
+      if (idx >= 0) {
+        const next = [...prev]
+        next[idx] = saved
+        return next
+      }
+      return [saved, ...prev]
+    })
+    setFormProject(null)
+  }
+
   return (
     <div className="page">
       <div className="page-head">
         <div>
           <h1>Projects</h1>
-          <p>Full project list — click the file icon to manage attachments</p>
+          <p>Click the pencil to edit, the paperclip to manage files</p>
         </div>
+        <button className="btn-primary" onClick={() => setFormProject('new')}>
+          <Plus size={15} /> New Project
+        </button>
       </div>
 
       <div className="table-card">
@@ -44,6 +64,7 @@ export function ProjectsPage() {
                 <th>Status</th>
                 <th>Progress</th>
                 <th>Files</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -55,29 +76,37 @@ export function ProjectsPage() {
                   <td><span className="region-badge">{project.region}</span></td>
                   <td>
                     <span className={`status-chip ${project.status.toLowerCase()}`}>
-                      {project.status === 'active' ? 'Active' : project.status === 'completed' ? 'Completed' : 'Draft'}
+                      {STATUS_LABEL[project.status.toLowerCase()] ?? project.status}
                     </span>
                   </td>
                   <td className="progress-cell">
                     <div className="progress-wrap">
-                      <div
-                        className="progress-bar"
-                        style={{
-                          width: `${project.progress}%`,
-                          background: project.progress >= 80 ? '#20bf6b' : project.progress >= 40 ? '#3867d6' : '#f0932b',
-                        }}
-                      />
+                      <div className="progress-track">
+                        <div
+                          className="progress-bar"
+                          style={{ width: `${project.progress}%`, background: progressColor(project.progress) }}
+                        />
+                      </div>
                       <span className="progress-label">{project.progress}%</span>
                     </div>
                   </td>
                   <td>
                     <button
                       className="file-btn"
-                      onClick={() => setSelectedProject(project)}
+                      onClick={() => setFileProject(project)}
                       title="Manage files"
                     >
                       <Paperclip size={14} />
                       {project.file_count > 0 && <span className="file-count">{project.file_count}</span>}
+                    </button>
+                  </td>
+                  <td>
+                    <button
+                      className="icon-btn"
+                      onClick={() => setFormProject(project)}
+                      title="Edit project"
+                    >
+                      <Pencil size={14} />
                     </button>
                   </td>
                 </tr>
@@ -87,12 +116,20 @@ export function ProjectsPage() {
         </div>
       </div>
 
-      {selectedProject && (
+      {fileProject && (
         <FileManager
-          projectId={selectedProject.id}
-          projectCode={selectedProject.code}
-          onClose={() => setSelectedProject(null)}
+          projectId={fileProject.id}
+          projectCode={fileProject.code}
+          onClose={() => setFileProject(null)}
           onFileCountChange={handleFileCountChange}
+        />
+      )}
+
+      {formProject && (
+        <ProjectFormModal
+          project={formProject === 'new' ? undefined : formProject}
+          onClose={() => setFormProject(null)}
+          onSaved={handleSaved}
         />
       )}
     </div>

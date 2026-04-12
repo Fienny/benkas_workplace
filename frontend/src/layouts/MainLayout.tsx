@@ -1,7 +1,7 @@
 import { FolderKanban, LayoutDashboard, Shield } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { ReactNode } from 'react'
-import { useUser } from '../App'
+import { useUser } from '../contexts'
 
 export function MainLayout({ children }: { children: ReactNode }) {
   const { user } = useUser()

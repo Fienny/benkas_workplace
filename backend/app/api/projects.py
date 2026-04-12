@@ -35,14 +35,14 @@ def list_projects(
 @router.post('', response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
     payload: ProjectCreate,
-    _: User = Depends(require_admin),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     existing = db.scalar(select(Project).where(Project.code == payload.code))
     if existing:
         raise HTTPException(status_code=400, detail='Project code already exists')
 
-    project = Project(**payload.model_dump())
+    project = Project(**payload.model_dump(), owner_id=current_user.id)
     db.add(project)
     db.commit()
     db.refresh(project)
@@ -72,14 +72,21 @@ def get_project(project_id: int, current_user: User = Depends(get_current_user),
 def update_project(
     project_id: int,
     payload: ProjectUpdate,
-    _: User = Depends(require_admin),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    _ = current_user
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
 
-    for key, value in payload.model_dump(exclude_unset=True).items():
+    updates = payload.model_dump(exclude_unset=True)
+    if 'code' in updates and updates['code'] != project.code:
+        clash = db.scalar(select(Project).where(Project.code == updates['code']))
+        if clash:
+            raise HTTPException(status_code=400, detail='Project code already exists')
+
+    for key, value in updates.items():
         setattr(project, key, value)
 
     db.commit()

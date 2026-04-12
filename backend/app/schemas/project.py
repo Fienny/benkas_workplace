@@ -12,18 +12,18 @@ class ProjectCreate(BaseModel):
     progress: int = Field(default=0, ge=0, le=100)
     description: str | None = None
     due_date: date | None = None
-    owner_id: int
+    # owner_id is auto-assigned from the authenticated user on create
 
 
 class ProjectUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=3, max_length=255)
+    code: str | None = Field(default=None, min_length=3, max_length=50)
     type: str | None = Field(default=None, min_length=2, max_length=120)
     region: str | None = Field(default=None, min_length=2, max_length=50)
     status: str | None = Field(default=None, max_length=50)
     progress: int | None = Field(default=None, ge=0, le=100)
     description: str | None = None
     due_date: date | None = None
-    owner_id: int | None = None
 
 
 class ProjectResponse(BaseModel):

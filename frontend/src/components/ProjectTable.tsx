@@ -10,7 +10,9 @@ function ProgressBar({ value }: { value: number }) {
   const color = value >= 80 ? '#20bf6b' : value >= 40 ? '#3867d6' : '#f0932b'
   return (
     <div className="progress-wrap">
-      <div className="progress-bar" style={{ width: `${value}%`, background: color }} />
+      <div className="progress-track">
+        <div className="progress-bar" style={{ width: `${value}%`, background: color }} />
+      </div>
       <span className="progress-label">{value}%</span>
     </div>
   )
