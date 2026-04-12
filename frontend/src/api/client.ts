@@ -2,6 +2,7 @@ import axios from 'axios'
 
 export const api = axios.create({
   baseURL: 'http://localhost:8000/api/v1',
+  timeout: 8000,  // 8 s — prevents infinite hang if backend is slow/unresponsive
 })
 
 api.interceptors.request.use((config) => {
