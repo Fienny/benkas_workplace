@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Paperclip, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { fetchProjects, deleteProject } from '../api/projects'
 import { Project } from '../types'
-import { FileManager } from '../components/FileManager'
 import { ProjectFormModal } from '../components/ProjectFormModal'
 import { useUser } from '../contexts'
 
@@ -12,20 +12,14 @@ const progressColor = (v: number) => v >= 80 ? '#20bf6b' : v >= 40 ? '#3867d6' :
 export function ProjectsPage() {
   const { t } = useTranslation()
   const { user } = useUser()
+  const navigate = useNavigate()
   const isAdmin = user?.role === 'admin'
   const [projects, setProjects] = useState<Project[]>([])
-  const [fileProject, setFileProject] = useState<Project | null>(null)
   const [formProject, setFormProject] = useState<Project | 'new' | null>(null)
 
   useEffect(() => {
     fetchProjects().then(setProjects).catch(() => setProjects([]))
   }, [])
-
-  function handleFileCountChange(projectId: number, delta: number) {
-    setProjects((prev) =>
-      prev.map((p) => p.id === projectId ? { ...p, file_count: p.file_count + delta } : p)
-    )
-  }
 
   function handleSaved(saved: Project) {
     setProjects((prev) => {
@@ -40,7 +34,8 @@ export function ProjectsPage() {
     setFormProject(null)
   }
 
-  async function handleDelete(project: Project) {
+  async function handleDelete(e: React.MouseEvent, project: Project) {
+    e.stopPropagation()
     if (!confirm(t('projects.confirmDelete', { code: project.code, title: project.title }))) return
     await deleteProject(project.id)
     setProjects((prev) => prev.filter((p) => p.id !== project.id))
@@ -87,7 +82,11 @@ export function ProjectsPage() {
             </thead>
             <tbody>
               {projects.map((project) => (
-                <tr key={project.id}>
+                <tr
+                  key={project.id}
+                  className="project-row-clickable"
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                >
                   <td><code className="code-cell">{project.code}</code></td>
                   <td className="title-cell">{project.title}</td>
                   <td className="muted-cell">{project.type}</td>
@@ -100,10 +99,7 @@ export function ProjectsPage() {
                   <td className="progress-cell">
                     <div className="progress-wrap">
                       <div className="progress-track">
-                        <div
-                          className="progress-bar"
-                          style={{ width: `${project.progress}%`, background: progressColor(project.progress) }}
-                        />
+                        <div className="progress-bar" style={{ width: `${project.progress}%`, background: progressColor(project.progress) }} />
                       </div>
                       <span className="progress-label">{project.progress}%</span>
                     </div>
@@ -115,19 +111,14 @@ export function ProjectsPage() {
                     }
                   </td>
                   <td>
-                    <button
-                      className="file-btn"
-                      onClick={() => setFileProject(project)}
-                      title={t('projects.colFiles')}
-                    >
-                      <Paperclip size={14} />
-                      {project.file_count > 0 && <span className="file-count">{project.file_count}</span>}
-                    </button>
+                    <span className={`file-count-badge${project.file_count > 0 ? ' has-files' : ''}`}>
+                      {project.file_count}
+                    </span>
                   </td>
                   <td>
                     <button
                       className="icon-btn"
-                      onClick={() => setFormProject(project)}
+                      onClick={(e) => { e.stopPropagation(); setFormProject(project) }}
                       title={t('projectForm.titleEdit')}
                     >
                       <Pencil size={14} />
@@ -137,7 +128,7 @@ export function ProjectsPage() {
                     <td>
                       <button
                         className="icon-btn icon-btn-danger"
-                        onClick={() => handleDelete(project)}
+                        onClick={(e) => handleDelete(e, project)}
                         title={t('admin.tipDelete')}
                       >
                         <Trash2 size={14} />
@@ -150,15 +141,6 @@ export function ProjectsPage() {
           </table>
         </div>
       </div>
-
-      {fileProject && (
-        <FileManager
-          projectId={fileProject.id}
-          projectCode={fileProject.code}
-          onClose={() => setFileProject(null)}
-          onFileCountChange={handleFileCountChange}
-        />
-      )}
 
       {formProject && (
         <ProjectFormModal

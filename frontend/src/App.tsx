@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { ProjectsPage } from './pages/ProjectsPage'
 import { AdminPage } from './pages/AdminPage'
 import { ActivityPage } from './pages/ActivityPage'
+import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { LoginPage } from './pages/LoginPage'
 import { fetchMe } from './api/users'
 import { UserContext } from './contexts'
@@ -40,6 +41,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:id" element={<ProjectDetailPage />} />
           <Route path="/activity" element={<ActivityPage />} />
           <Route path="/admin" element={<AdminPage />} />
         </Routes>

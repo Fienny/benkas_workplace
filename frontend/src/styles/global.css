@@ -301,6 +301,97 @@ tr:hover td { background: #fafafa; }
   display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px;
 }
 
+/* ── Project detail page ────────────────────────────── */
+.detail-header {
+  margin-bottom: 24px;
+}
+.detail-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; padding: 0; margin-bottom: 12px;
+  color: #6b7280; font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: color 0.15s;
+}
+.detail-back:hover { color: #1d4ed8; }
+
+.detail-title-row {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+}
+.detail-meta-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;
+}
+.detail-lead { font-size: 13px; color: #6b7280; }
+.detail-title { margin: 0 0 4px; font-size: 26px; font-weight: 700; }
+.detail-type { color: #6b7280; font-size: 13px; }
+.detail-progress-block {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.detail-progress-label { font-size: 18px; font-weight: 700; color: #111827; }
+
+/* File manager toolbar */
+.detail-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.detail-breadcrumb { display: flex; align-items: center; gap: 4px; }
+.crumb-btn {
+  background: none; border: none; padding: 4px 6px; border-radius: 6px;
+  font-size: 13px; font-weight: 500; color: #6b7280; cursor: pointer;
+  transition: background 0.15s;
+}
+.crumb-btn:hover { background: #f3f4f6; color: #111827; }
+.crumb-active { color: #111827; cursor: default; }
+.crumb-active:hover { background: none; }
+.crumb-sep { color: #d1d5db; flex-shrink: 0; }
+
+.detail-error {
+  display: flex; align-items: center;
+  background: #fee2e2; color: #dc2626;
+  padding: 10px 12px; border-radius: 10px; font-size: 13px; margin-bottom: 12px;
+}
+
+/* File/folder rows */
+.fm-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 4px; border-bottom: 1px solid #f3f4f6;
+}
+.fm-row:last-child { border-bottom: none; }
+.fm-folder-row { cursor: pointer; border-radius: 8px; padding: 9px 8px; }
+.fm-folder-row:hover { background: #f9fafb; }
+.fm-icon { flex-shrink: 0; }
+.fm-icon-folder { color: #f0932b; }
+.fm-icon-file { color: #6b7280; }
+.fm-name { flex: 1; font-size: 13px; font-weight: 500; color: #111827; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fm-file-link { color: #111827; text-decoration: none; }
+.fm-file-link:hover { color: #1d4ed8; text-decoration: underline; }
+.fm-meta { font-size: 12px; color: #9ca3af; flex-shrink: 0; }
+.fm-date { font-size: 12px; color: #9ca3af; width: 80px; flex-shrink: 0; }
+
+/* New folder inline input */
+.new-folder-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 4px; border-bottom: 1px solid #f3f4f6;
+  background: #fafafa; border-radius: 8px;
+  margin-bottom: 4px;
+}
+.new-folder-input {
+  flex: 1; border: 1px solid #d1d5db; border-radius: 8px;
+  padding: 6px 10px; font-size: 13px; font-family: inherit; outline: none;
+  transition: border-color 0.15s;
+}
+.new-folder-input:focus { border-color: #3867d6; }
+
+/* Clickable project row */
+.project-row-clickable { cursor: pointer; }
+.project-row-clickable:hover td { background: #f0f7ff !important; }
+
+/* File count badge in table */
+.file-count-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  background: #f3f4f6; color: #6b7280; font-size: 11px; font-weight: 600;
+}
+.file-count-badge.has-files { background: #dbeafe; color: #1d4ed8; }
+
 /* ── Activity feed ──────────────────────────────────── */
 .activity-feed { display: flex; flex-direction: column; }
 

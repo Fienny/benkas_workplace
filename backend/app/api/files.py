@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -19,10 +19,17 @@ storage_service = StorageService()
 
 
 @router.get('/project/{project_id}', response_model=list[FileSchema])
-def list_project_files(project_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    _ = current_user
+def list_project_files(
+    project_id: int,
+    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     return list(
-        db.scalars(select(ProjectFile).where(ProjectFile.project_id == project_id).order_by(ProjectFile.created_at.desc())).all()
+        db.scalars(
+            select(ProjectFile)
+            .where(ProjectFile.project_id == project_id)
+            .order_by(ProjectFile.created_at.desc())
+        ).all()
     )
 
 
@@ -30,6 +37,7 @@ def list_project_files(project_id: int, current_user: User = Depends(get_current
 def upload_file(
     project_id: int,
     file: UploadFile = File(...),
+    folder_id: int | None = Form(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -40,6 +48,7 @@ def upload_file(
     stored_name, file_path, file_size = storage_service.save(file)
     record = ProjectFile(
         project_id=project_id,
+        folder_id=folder_id,
         uploaded_by=current_user.id,
         original_name=file.filename or stored_name,
         stored_name=stored_name,
@@ -80,7 +89,6 @@ def delete_file(file_id: int, current_user: User = Depends(get_current_user), db
         raise HTTPException(status_code=403, detail='You can only delete files you uploaded')
 
     original_name = record.original_name
-
     storage_service.delete(record.file_path)
     db.delete(record)
     log_action(db, current_user, 'file.delete', original_name, context_label=project.code if project else None)

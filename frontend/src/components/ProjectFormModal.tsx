@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Project, User } from '../types'
 import { createProject, updateProject, ProjectPayload } from '../api/projects'
 import { fetchUsers } from '../api/users'
+import { useUser } from '../contexts'
 
 interface Props {
   project?: Project
@@ -25,6 +26,8 @@ const EMPTY: ProjectPayload = {
 
 export function ProjectFormModal({ project, onClose, onSaved }: Props) {
   const { t } = useTranslation()
+  const { user } = useUser()
+  const isAdmin = user?.role === 'admin'
   const isEdit = !!project
   const [form, setForm] = useState<ProjectPayload>(EMPTY)
   const [users, setUsers] = useState<User[]>([])
@@ -183,15 +186,23 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
             </div>
             <div className="form-field">
               <label>{t('projectForm.fieldLead')}</label>
-              <select
-                value={form.responsible_id ?? ''}
-                onChange={(e) => set('responsible_id', e.target.value ? Number(e.target.value) : null)}
-              >
-                <option value="">{t('projectForm.noLead')}</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>{u.full_name}</option>
-                ))}
-              </select>
+              {isAdmin ? (
+                <select
+                  value={form.responsible_id ?? ''}
+                  onChange={(e) => set('responsible_id', e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">{t('projectForm.noLead')}</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>{u.full_name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  value={users.find((u) => u.id === form.responsible_id)?.full_name ?? t('projectForm.noLead')}
+                  readOnly
+                  style={{ background: '#f9fafb', color: '#6b7280' }}
+                />
+              )}
             </div>
           </div>
 

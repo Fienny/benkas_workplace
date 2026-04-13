@@ -106,6 +106,24 @@ const en = {
     errorForbidden: 'You can only delete files you uploaded. Ask an admin to remove this file.',
   },
 
+  // Project detail page
+  detail: {
+    loading: 'Loading project\u2026',
+    notFound: 'Project not found.',
+    root: 'Root',
+    newFolder: 'New Folder',
+    upload: 'Upload',
+    save: 'Save',
+    folderNamePlaceholder: 'Folder name',
+    fileCount: '{{count}} file(s)',
+    noFiles: 'No files here yet. Upload one above.',
+    deleteFolder: 'Delete folder',
+    confirmDeleteFolder: 'Delete folder "{{name}}"? This cannot be undone.',
+    folderNotEmpty: 'Folder contains {{count}} file(s). Delete them first.',
+    folderError: 'Could not create folder.',
+    download: 'Download',
+  },
+
   // Activity log
   activity: {
     title: 'Activity',

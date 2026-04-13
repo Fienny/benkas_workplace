@@ -30,12 +30,21 @@ export type Project = {
 export type ProjectFile = {
   id: number
   project_id: number
+  folder_id: number | null
   uploaded_by: number
   original_name: string
   stored_name: string
   content_type: string | null
   file_size: number
   file_path: string
+  created_at: string
+}
+
+export type ProjectFolder = {
+  id: number
+  project_id: number
+  name: string
+  created_by: number
   created_at: string
 }
 
