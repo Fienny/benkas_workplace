@@ -54,8 +54,12 @@ export function FileManager({ projectId, projectCode, onClose, onFileCountChange
       await deleteFile(fileId)
       setFiles((prev) => prev.filter((f) => f.id !== fileId))
       onFileCountChange(projectId, -1)
-    } catch {
-      setError(t('fileManager.errorDelete'))
+    } catch (err: any) {
+      if (err?.response?.status === 403) {
+        setError(t('fileManager.errorForbidden'))
+      } else {
+        setError(t('fileManager.errorDelete'))
+      }
     }
   }
 

@@ -7,6 +7,7 @@ from app.core.security import hash_password
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.services.audit import log_action
 
 router = APIRouter(prefix='/users', tags=['users'])
 
@@ -24,7 +25,7 @@ def list_users(_: User = Depends(require_admin), db: Session = Depends(get_db)):
 @router.post('', response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(
     payload: UserCreate,
-    _: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     if db.scalar(select(User).where(User.username == payload.username)):
@@ -36,6 +37,7 @@ def create_user(
         role=payload.role,
     )
     db.add(user)
+    log_action(db, admin, 'user.create', payload.username)
     db.commit()
     db.refresh(user)
     return user
@@ -45,7 +47,7 @@ def create_user(
 def update_user(
     user_id: int,
     payload: UserUpdate,
-    _: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     user = db.get(User, user_id)
@@ -55,6 +57,7 @@ def update_user(
         user.is_active = payload.is_active
     if payload.role is not None:
         user.role = payload.role
+    log_action(db, admin, 'user.update', user.username)
     db.commit()
     db.refresh(user)
     return user
@@ -71,5 +74,7 @@ def delete_user(
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail='User not found')
+    username = user.username
     db.delete(user)
+    log_action(db, admin, 'user.delete', username)
     db.commit()

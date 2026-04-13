@@ -4,6 +4,7 @@ const ru = {
     dashboard: 'Обзор',
     projects: 'Проекты',
     adminPanel: 'Администрирование',
+    activity: 'Активность',
     subtitle: 'Инженерная панель',
     signOut: 'Выйти',
     administrator: 'Администратор',
@@ -99,6 +100,26 @@ const ru = {
     noFiles: 'Файлов пока нет.',
     errorUpload: 'Ошибка загрузки. Попробуйте снова.',
     errorDelete: 'Ошибка удаления.',
+    errorForbidden: 'Этот файл нельзя удалить: он загружен другим пользователем. Обратитесь к администратору.',
+  },
+
+  // Журнал активности
+  activity: {
+    title: 'Активность',
+    subtitle: 'Последние действия всех участников команды',
+    loading: 'Загрузка\u2026',
+    empty: 'Действий пока нет.',
+    refresh: 'Обновить',
+    actions: {
+      'file.upload':    'загрузил(а) {{entity}} в {{context}}',
+      'file.delete':    'удалил(а) {{entity}} из {{context}}',
+      'project.create': 'создал(а) проект {{entity}}',
+      'project.update': 'обновил(а) проект {{entity}}',
+      'project.delete': 'удалил(а) проект {{entity}}',
+      'user.create':    'создал(а) пользователя {{entity}}',
+      'user.update':    'обновил(а) пользователя {{entity}}',
+      'user.delete':    'удалил(а) пользователя {{entity}}',
+    },
   },
 
   // Администрирование

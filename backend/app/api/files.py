@@ -11,6 +11,7 @@ from app.models.file import ProjectFile
 from app.models.project import Project
 from app.models.user import User, UserRole
 from app.schemas.file import FileResponse as FileSchema
+from app.services.audit import log_action
 from app.services.storage import StorageService
 
 router = APIRouter(prefix='/files', tags=['files'])
@@ -47,6 +48,7 @@ def upload_file(
         file_path=file_path,
     )
     db.add(record)
+    log_action(db, current_user, 'file.upload', file.filename or stored_name, context_label=project.code)
     db.commit()
     db.refresh(record)
     return record
@@ -67,7 +69,12 @@ def delete_file(file_id: int, current_user: User = Depends(get_current_user), db
     if not record:
         raise HTTPException(status_code=404, detail='File not found')
     if current_user.role != UserRole.admin and record.uploaded_by != current_user.id:
-        raise HTTPException(status_code=403, detail='Not enough permissions')
+        raise HTTPException(status_code=403, detail='You can only delete files you uploaded')
+
+    project = db.get(Project, record.project_id)
+    original_name = record.original_name
+
     storage_service.delete(record.file_path)
     db.delete(record)
+    log_action(db, current_user, 'file.delete', original_name, context_label=project.code if project else None)
     db.commit()

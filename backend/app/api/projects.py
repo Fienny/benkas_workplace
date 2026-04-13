@@ -8,6 +8,7 @@ from app.models.file import ProjectFile
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.services.audit import log_action
 
 router = APIRouter(prefix='/projects', tags=['projects'])
 
@@ -44,6 +45,7 @@ def create_project(
 
     project = Project(**payload.model_dump(), owner_id=current_user.id)
     db.add(project)
+    log_action(db, current_user, 'project.create', payload.code)
     db.commit()
     db.refresh(project)
     response = ProjectResponse.model_validate(project)
@@ -75,7 +77,6 @@ def update_project(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _ = current_user
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
@@ -89,6 +90,7 @@ def update_project(
     for key, value in updates.items():
         setattr(project, key, value)
 
+    log_action(db, current_user, 'project.update', project.code)
     db.commit()
     db.refresh(project)
     response = ProjectResponse.model_validate(project)
@@ -99,11 +101,13 @@ def update_project(
 @router.delete('/{project_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_project(
     project_id: int,
-    _: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
+    code = project.code
     db.delete(project)
+    log_action(db, admin, 'project.delete', code)
     db.commit()

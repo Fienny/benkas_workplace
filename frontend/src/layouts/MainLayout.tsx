@@ -1,4 +1,4 @@
-import { FolderKanban, LayoutDashboard, LogOut, Shield } from 'lucide-react'
+import { Activity, FolderKanban, LayoutDashboard, LogOut, Shield } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -37,6 +37,9 @@ export function MainLayout({ children, onLogout }: Props) {
             </NavLink>
             <NavLink to="/projects" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
               <FolderKanban size={18} /> {t('nav.projects')}
+            </NavLink>
+            <NavLink to="/activity" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+              <Activity size={18} /> {t('nav.activity')}
             </NavLink>
             {user?.role === 'admin' && (
               <NavLink to="/admin" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>

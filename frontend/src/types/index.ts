@@ -45,3 +45,13 @@ export type User = {
   is_active: boolean
   created_at: string
 }
+
+export type AuditLog = {
+  id: number
+  user_id: number
+  user_name: string
+  action: string
+  entity_label: string
+  context_label: string | null
+  created_at: string
+}

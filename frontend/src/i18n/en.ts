@@ -4,6 +4,7 @@ const en = {
     dashboard: 'Dashboard',
     projects: 'Projects',
     adminPanel: 'Admin Panel',
+    activity: 'Activity',
     subtitle: 'Engineering Dashboard',
     signOut: 'Sign out',
     administrator: 'Administrator',
@@ -99,6 +100,26 @@ const en = {
     noFiles: 'No files yet.',
     errorUpload: 'Upload failed. Try again.',
     errorDelete: 'Delete failed.',
+    errorForbidden: 'You can only delete files you uploaded. Ask an admin to remove this file.',
+  },
+
+  // Activity log
+  activity: {
+    title: 'Activity',
+    subtitle: 'Recent actions by all team members',
+    loading: 'Loading\u2026',
+    empty: 'No activity yet.',
+    refresh: 'Refresh',
+    actions: {
+      'file.upload':    'uploaded {{entity}} to {{context}}',
+      'file.delete':    'deleted {{entity}} from {{context}}',
+      'project.create': 'created project {{entity}}',
+      'project.update': 'updated project {{entity}}',
+      'project.delete': 'deleted project {{entity}}',
+      'user.create':    'created user {{entity}}',
+      'user.update':    'updated user {{entity}}',
+      'user.delete':    'deleted user {{entity}}',
+    },
   },
 
   // Admin page
