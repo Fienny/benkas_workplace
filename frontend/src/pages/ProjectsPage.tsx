@@ -79,6 +79,7 @@ export function ProjectsPage() {
                 <th>{t('projects.colRegion')}</th>
                 <th>{t('projects.colStatus')}</th>
                 <th>{t('projects.colProgress')}</th>
+                <th>{t('projects.colLead')}</th>
                 <th>{t('projects.colFiles')}</th>
                 <th></th>
                 {isAdmin && <th></th>}
@@ -106,6 +107,12 @@ export function ProjectsPage() {
                       </div>
                       <span className="progress-label">{project.progress}%</span>
                     </div>
+                  </td>
+                  <td>
+                    {project.responsible_name
+                      ? <span className="lead-badge" title={project.responsible_name}>{project.responsible_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}</span>
+                      : <span className="muted-cell">—</span>
+                    }
                   </td>
                   <td>
                     <button

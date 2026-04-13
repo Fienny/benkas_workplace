@@ -23,5 +23,5 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
-    projects = relationship('Project', back_populates='owner')
+    projects = relationship('Project', foreign_keys='[Project.owner_id]', back_populates='owner')
     uploaded_files = relationship('ProjectFile', back_populates='uploaded_by_user')

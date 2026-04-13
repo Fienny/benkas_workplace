@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Project } from '../types'
+import { Project, User } from '../types'
 import { createProject, updateProject, ProjectPayload } from '../api/projects'
+import { fetchUsers } from '../api/users'
 
 interface Props {
   project?: Project
@@ -19,12 +20,14 @@ const EMPTY: ProjectPayload = {
   progress: 0,
   description: '',
   due_date: '',
+  responsible_id: null,
 }
 
 export function ProjectFormModal({ project, onClose, onSaved }: Props) {
   const { t } = useTranslation()
   const isEdit = !!project
   const [form, setForm] = useState<ProjectPayload>(EMPTY)
+  const [users, setUsers] = useState<User[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -33,6 +36,10 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
     { value: 'draft',     label: t('projectForm.statusDraft') },
     { value: 'completed', label: t('projectForm.statusCompleted') },
   ]
+
+  useEffect(() => {
+    fetchUsers().then(setUsers).catch(() => setUsers([]))
+  }, [])
 
   useEffect(() => {
     if (project) {
@@ -45,13 +52,14 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
         progress: project.progress,
         description: project.description ?? '',
         due_date: project.due_date ?? '',
+        responsible_id: project.responsible_id ?? null,
       })
     } else {
       setForm(EMPTY)
     }
   }, [project])
 
-  function set(field: keyof ProjectPayload, value: string | number) {
+  function set(field: keyof ProjectPayload, value: string | number | null) {
     setForm((prev) => ({ ...prev, [field]: value }))
     setError(null)
   }
@@ -173,7 +181,18 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
                 onChange={(e) => set('due_date', e.target.value)}
               />
             </div>
-            <div className="form-field" />
+            <div className="form-field">
+              <label>{t('projectForm.fieldLead')}</label>
+              <select
+                value={form.responsible_id ?? ''}
+                onChange={(e) => set('responsible_id', e.target.value ? Number(e.target.value) : null)}
+              >
+                <option value="">{t('projectForm.noLead')}</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>{u.full_name}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="form-field">

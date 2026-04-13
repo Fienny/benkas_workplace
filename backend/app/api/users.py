@@ -18,8 +18,8 @@ def me(current_user: User = Depends(get_current_user)):
 
 
 @router.get('', response_model=list[UserResponse])
-def list_users(_: User = Depends(require_admin), db: Session = Depends(get_db)):
-    return list(db.scalars(select(User).order_by(User.created_at.desc())).all())
+def list_users(_: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return list(db.scalars(select(User).where(User.is_active.is_(True)).order_by(User.full_name).all()))
 
 
 @router.post('', response_model=UserResponse, status_code=status.HTTP_201_CREATED)

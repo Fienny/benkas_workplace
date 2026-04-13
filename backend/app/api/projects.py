@@ -29,6 +29,7 @@ def list_projects(
     for project, file_count in rows:
         item = ProjectResponse.model_validate(project)
         item.file_count = file_count
+        item.responsible_name = project.responsible.full_name if project.responsible else None
         result.append(item)
     return result
 
@@ -67,6 +68,7 @@ def get_project(project_id: int, current_user: User = Depends(get_current_user),
     project, file_count = row
     response = ProjectResponse.model_validate(project)
     response.file_count = file_count
+    response.responsible_name = project.responsible.full_name if project.responsible else None
     return response
 
 
@@ -95,6 +97,7 @@ def update_project(
     db.refresh(project)
     response = ProjectResponse.model_validate(project)
     response.file_count = db.scalar(select(func.count(ProjectFile.id)).where(ProjectFile.project_id == project.id)) or 0
+    response.responsible_name = project.responsible.full_name if project.responsible else None
     return response
 
 

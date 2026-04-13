@@ -68,10 +68,17 @@ def delete_file(file_id: int, current_user: User = Depends(get_current_user), db
     record = db.get(ProjectFile, file_id)
     if not record:
         raise HTTPException(status_code=404, detail='File not found')
-    if current_user.role != UserRole.admin and record.uploaded_by != current_user.id:
-        raise HTTPException(status_code=403, detail='You can only delete files you uploaded')
 
     project = db.get(Project, record.project_id)
+    is_project_lead = project and project.responsible_id == current_user.id
+
+    if (
+        current_user.role != UserRole.admin
+        and record.uploaded_by != current_user.id
+        and not is_project_lead
+    ):
+        raise HTTPException(status_code=403, detail='You can only delete files you uploaded')
+
     original_name = record.original_name
 
     storage_service.delete(record.file_path)

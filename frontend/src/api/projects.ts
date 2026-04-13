@@ -15,6 +15,7 @@ export interface ProjectPayload {
   progress: number
   description?: string
   due_date?: string
+  responsible_id?: number | null
 }
 
 export async function createProject(payload: ProjectPayload): Promise<Project> {

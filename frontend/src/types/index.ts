@@ -21,6 +21,8 @@ export type Project = {
   description?: string | null
   due_date?: string | null
   owner_id: number
+  responsible_id?: number | null
+  responsible_name?: string | null
   created_at: string
   file_count: number
 }

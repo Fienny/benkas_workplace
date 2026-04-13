@@ -12,6 +12,7 @@ class ProjectCreate(BaseModel):
     progress: int = Field(default=0, ge=0, le=100)
     description: str | None = None
     due_date: date | None = None
+    responsible_id: int | None = None
     # owner_id is auto-assigned from the authenticated user on create
 
 
@@ -24,6 +25,7 @@ class ProjectUpdate(BaseModel):
     progress: int | None = Field(default=None, ge=0, le=100)
     description: str | None = None
     due_date: date | None = None
+    responsible_id: int | None = None
 
 
 class ProjectResponse(BaseModel):
@@ -37,6 +39,8 @@ class ProjectResponse(BaseModel):
     description: str | None
     due_date: date | None
     owner_id: int
+    responsible_id: int | None = None
+    responsible_name: str | None = None
     created_at: datetime
     file_count: int = 0
 
