@@ -40,7 +40,7 @@ export type ProjectFile = {
 export type User = {
   id: number
   full_name: string
-  email: string
+  username: string
   role: 'admin' | 'user'
   is_active: boolean
   created_at: string

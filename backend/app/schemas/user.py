@@ -8,7 +8,7 @@ from app.models.user import UserRole
 class UserResponse(BaseModel):
     id: int
     full_name: str
-    email: str  # plain str — email field doubles as username, no format enforcement
+    username: str
     role: UserRole
     is_active: bool
     created_at: datetime

@@ -6,64 +6,37 @@ from app.db.session import SessionLocal, engine
 from app.models.project import Project
 from app.models.user import User, UserRole
 
-# ── Credentials ──────────────────────────────────────────────────────────────
-ADMIN_EMAIL    = 'admin'
-ADMIN_PASSWORD = 'admin'
-USER_EMAIL     = 'user'
-USER_PASSWORD  = 'user'
-
-# Legacy emails that may exist in older databases — will be migrated
-LEGACY_ADMIN_EMAILS = ['admin@gmail.com', 'admin@benka.local', 'admin@benka.com']
-LEGACY_USER_EMAILS  = ['user@benka.local', 'user@benka.com']
+ACCOUNTS = [
+    dict(username='admin', full_name='Admin Benka',   password='admin', role=UserRole.admin),
+    dict(username='user',  full_name='Engineer User', password='user',  role=UserRole.user),
+]
 
 
-def _ensure_user(db, email: str, full_name: str, password: str, role: UserRole) -> User:
-    user = db.scalar(select(User).where(User.email == email))
-    if user:
-        # Always refresh the password so re-seeding restores known credentials
-        user.password_hash = hash_password(password)
+def _ensure_user(db, username: str, full_name: str, password: str, role: UserRole) -> User:
+    u = db.scalar(select(User).where(User.username == username))
+    if u:
+        u.password_hash = hash_password(password)
+        u.full_name = full_name
+        u.role = role
         db.commit()
-        print(f'  Updated:  {email}')
+        print(f'  Updated : {username}')
     else:
-        user = User(
-            full_name=full_name,
-            email=email,
-            password_hash=hash_password(password),
-            role=role,
-        )
-        db.add(user)
+        u = User(username=username, full_name=full_name,
+                 password_hash=hash_password(password), role=role)
+        db.add(u)
         db.commit()
-        db.refresh(user)
-        print(f'  Created:  {email}')
-    return user
+        db.refresh(u)
+        print(f'  Created : {username}')
+    return u
 
 
 def run() -> None:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        # ── Migrate legacy admin accounts ──────────────────────────────────
-        for old_email in LEGACY_ADMIN_EMAILS:
-            old = db.scalar(select(User).where(User.email == old_email))
-            if old:
-                old.email = ADMIN_EMAIL
-                old.password_hash = hash_password(ADMIN_PASSWORD)
-                db.commit()
-                print(f'  Migrated: {old_email} → {ADMIN_EMAIL}')
+        users = [_ensure_user(db, **a) for a in ACCOUNTS]
+        admin, regular = users[0], users[1]
 
-        for old_email in LEGACY_USER_EMAILS:
-            old = db.scalar(select(User).where(User.email == old_email))
-            if old:
-                old.email = USER_EMAIL
-                old.password_hash = hash_password(USER_PASSWORD)
-                db.commit()
-                print(f'  Migrated: {old_email} → {USER_EMAIL}')
-
-        # ── Ensure canonical accounts exist ───────────────────────────────
-        admin = _ensure_user(db, ADMIN_EMAIL, 'Admin Benka',   ADMIN_PASSWORD, UserRole.admin)
-        user  = _ensure_user(db, USER_EMAIL,  'Engineer User', USER_PASSWORD,  UserRole.user)
-
-        # ── Seed sample projects (skips if code already exists) ───────────
         seed_projects = [
             dict(code='EA-AND-6001',  title='Andijan Audit',               type='Project',                           region='AND', status='active',    progress=82),
             dict(code='PJ-TAS-1001',  title='Tashkent STC',                type='Special Technical Conditions',      region='TAS', status='active',    progress=72),
@@ -74,11 +47,9 @@ def run() -> None:
             dict(code='PJ-SAM-3030',  title='Samarkand Review',             type='Project',                           region='SAM', status='draft',     progress=0),
             dict(code='PJ-QAS-8040',  title='Qashqadaryo Completion',       type='Special Technical Conditions',      region='QAS', status='completed', progress=100),
         ]
-
         for i, p in enumerate(seed_projects):
             if not db.scalar(select(Project).where(Project.code == p['code'])):
-                owner = admin if i % 2 == 0 else user
-                db.add(Project(**p, owner_id=owner.id))
+                db.add(Project(**p, owner_id=(admin if i % 2 == 0 else regular).id))
                 print(f'  Created project: {p["code"]}')
             else:
                 print(f'  Exists  project: {p["code"]}')
@@ -86,9 +57,8 @@ def run() -> None:
 
         print()
         print('Seed complete.')
-        print(f'  Admin : {ADMIN_EMAIL!r}  /  {ADMIN_PASSWORD!r}')
-        print(f'  User  : {USER_EMAIL!r}   /  {USER_PASSWORD!r}')
-
+        for a in ACCOUNTS:
+            print(f'  {a["role"].value:5s}  login: {a["username"]}  /  password: {a["password"]}')
     finally:
         db.close()
 

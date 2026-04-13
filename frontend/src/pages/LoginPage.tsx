@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { api } from '../api/client'
+import { User } from '../types'
 
 interface Props {
-  onLogin: () => void
+  onLogin: (user: User) => void
 }
 
 export function LoginPage({ onLogin }: Props) {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -16,15 +17,14 @@ export function LoginPage({ onLogin }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const { data } = await api.post('/auth/login', { email, password })
-      localStorage.setItem('access_token', data.access_token)
-      onLogin()
+      const { data } = await api.post<User>('/auth/login', { username, password })
+      onLogin(data)
     } catch (err: any) {
       const status = err?.response?.status
       if (status === 401) {
-        setError('Wrong email or password.')
+        setError('Wrong username or password.')
       } else if (status === 422) {
-        setError('Invalid input — check email and password fields.')
+        setError('Invalid input — check username and password fields.')
       } else if (err?.code === 'ECONNABORTED' || err?.code === 'ERR_NETWORK') {
         setError('Cannot reach the backend. Is uvicorn running on port 8000?')
       } else {
@@ -50,13 +50,13 @@ export function LoginPage({ onLogin }: Props) {
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-field">
-            <label>Email</label>
+            <label>Username</label>
             <input
               type="text"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setError(null) }}
+              value={username}
+              onChange={(e) => { setUsername(e.target.value); setError(null) }}
               placeholder="admin"
-              autoComplete="email"
+              autoComplete="username"
               required
             />
           </div>

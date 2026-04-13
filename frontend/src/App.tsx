@@ -9,49 +9,32 @@ import { UserContext } from './contexts'
 import { User } from './types'
 
 export default function App() {
-  const [token, setToken] = useState<string | null>(localStorage.getItem('access_token'))
   const [user, setUser] = useState<User | null>(null)
-  const [checkingToken, setCheckingToken] = useState(!!localStorage.getItem('access_token'))
+  const [checking, setChecking] = useState(true)
 
-  // When a stored token exists, validate it and fetch user info
+  // On load, check if there's an active session
   useEffect(() => {
-    if (!token) return
     fetchMe()
       .then(setUser)
-      .catch(() => {
-        // token is stale — go back to login
-        localStorage.removeItem('access_token')
-        setToken(null)
-      })
-      .finally(() => setCheckingToken(false))
-  }, [token])
+      .catch(() => setUser(null))
+      .finally(() => setChecking(false))
+  }, [])
 
-  // No token → show login page
-  if (!token) {
-    return (
-      <LoginPage onLogin={() => {
-        setToken(localStorage.getItem('access_token'))
-        setCheckingToken(true)
-      }} />
-    )
-  }
-
-  // Token exists but we're still verifying it
-  if (checkingToken) {
+  if (checking) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#6b7280', fontFamily: 'Inter, sans-serif', fontSize: 14 }}>
-        Verifying session…
+        Loading…
       </div>
     )
   }
 
+  if (!user) {
+    return <LoginPage onLogin={setUser} />
+  }
+
   return (
     <UserContext.Provider value={{ user }}>
-      <MainLayout onLogout={() => {
-        localStorage.removeItem('access_token')
-        setToken(null)
-        setUser(null)
-      }}>
+      <MainLayout onLogout={() => setUser(null)}>
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
