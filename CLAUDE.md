@@ -57,6 +57,47 @@ This file tracks what has been done in each Claude session.
 
 ---
 
+## Session 2 & 3 — Cookie sessions, username login (2026-04-13)
+
+### What changed
+
+**Backend**
+- `backend/requirements.txt` — removed `python-jose`, `email-validator`; added `itsdangerous>=2.1.0`
+- `backend/app/core/security.py` — stripped to `hash_password` / `verify_password` only (no JWT)
+- `backend/app/models/user.py` — renamed `email` → `username` column (DB reset required!)
+- `backend/app/schemas/auth.py` — `LoginRequest(username, password)` with no email validation
+- `backend/app/schemas/user.py` — `UserResponse.username: str` (no EmailStr)
+- `backend/app/api/auth.py` — login sets `request.session['user_id']`; logout clears session; no token returned
+- `backend/app/api/deps.py` — reads `request.session['user_id']` instead of Bearer token
+- `backend/app/main.py` — added `SessionMiddleware(secret_key, same_site='lax', https_only=False, max_age=30days)`
+- `backend/app/seed.py` — simple `admin`/`admin` + `user`/`user` credentials
+
+**Frontend**
+- `frontend/vite.config.ts` — added Vite proxy `/api` → `http://127.0.0.1:8000` (fixes Windows IPv6/IPv4 issue)
+- `frontend/src/api/client.ts` — relative `baseURL: '/api/v1'`, `withCredentials: true`, no auth interceptor
+- `frontend/src/types/index.ts` — `User.username` instead of `User.email`
+- `frontend/src/contexts.ts` — extracted `UserContext` here to break circular import
+- `frontend/src/App.tsx` — calls `fetchMe()` on load to detect session; no localStorage; passes `User` to `onLogin`
+- `frontend/src/pages/LoginPage.tsx` — username field (not email); submits `{username, password}`; no token stored
+- `frontend/src/layouts/MainLayout.tsx` — logout calls `POST /auth/logout` before clearing state
+
+### Credentials (updated)
+| Role  | Username | Password |
+|-------|----------|----------|
+| Admin | admin    | admin    |
+| User  | user     | user     |
+
+### Reset required after pulling this session's changes
+Because the `email` column was renamed to `username`, existing DBs must be wiped:
+```powershell
+docker compose down -v          # drop volumes (wipes DB)
+pip install -r requirements.txt # get itsdangerous
+docker compose up -d db
+python -m app.seed              # re-seed
+```
+
+---
+
 ## How to continue work
 
 1. Read this file first.
