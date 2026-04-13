@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, require_admin
+from app.core.security import hash_password
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.user import UserResponse
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
 
 router = APIRouter(prefix='/users', tags=['users'])
 
@@ -18,3 +19,57 @@ def me(current_user: User = Depends(get_current_user)):
 @router.get('', response_model=list[UserResponse])
 def list_users(_: User = Depends(require_admin), db: Session = Depends(get_db)):
     return list(db.scalars(select(User).order_by(User.created_at.desc())).all())
+
+
+@router.post('', response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def create_user(
+    payload: UserCreate,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    if db.scalar(select(User).where(User.username == payload.username)):
+        raise HTTPException(status_code=400, detail='Username already taken')
+    user = User(
+        full_name=payload.full_name,
+        username=payload.username,
+        password_hash=hash_password(payload.password),
+        role=payload.role,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.patch('/{user_id}', response_model=UserResponse)
+def update_user(
+    user_id: int,
+    payload: UserUpdate,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    if payload.is_active is not None:
+        user.is_active = payload.is_active
+    if payload.role is not None:
+        user.role = payload.role
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.delete('/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    if admin.id == user_id:
+        raise HTTPException(status_code=400, detail='Cannot delete your own account')
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    db.delete(user)
+    db.commit()

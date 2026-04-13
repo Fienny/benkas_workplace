@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { MainLayout } from './layouts/MainLayout'
 import { DashboardPage } from './pages/DashboardPage'
 import { ProjectsPage } from './pages/ProjectsPage'
+import { AdminPage } from './pages/AdminPage'
 import { LoginPage } from './pages/LoginPage'
 import { fetchMe } from './api/users'
 import { UserContext } from './contexts'
@@ -38,6 +39,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </MainLayout>
     </UserContext.Provider>

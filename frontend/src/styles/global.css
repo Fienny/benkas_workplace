@@ -186,7 +186,8 @@ tr:hover td { background: #fafafa; }
   transition: background 0.15s, color 0.15s;
 }
 .icon-btn:hover { background: #f3f4f6; color: #111827; }
-.icon-btn.danger:hover { background: #fee2e2; color: #dc2626; }
+.icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.icon-btn-danger:hover { background: #fee2e2 !important; color: #dc2626 !important; }
 
 /* ── File manager overlay ───────────────────────────── */
 .file-manager-overlay {
@@ -298,6 +299,21 @@ tr:hover td { background: #fafafa; }
 
 .form-actions {
   display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px;
+}
+
+/* ── Role badges ────────────────────────────────────── */
+.status-chip.role-admin { background: #ede9fe; color: #6d28d9; }
+.status-chip.role-user  { background: #e0f2fe; color: #0369a1; }
+
+/* ── Admin form ─────────────────────────────────────── */
+.admin-form { padding-top: 4px; }
+.admin-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .admin-form-row { grid-template-columns: 1fr 1fr; }
 }
 
 /* ── Login page ─────────────────────────────────────── */

@@ -1,17 +1,26 @@
 import { useEffect, useState } from 'react'
-import { Paperclip, Pencil, Plus } from 'lucide-react'
-import { fetchProjects } from '../api/projects'
+import { Paperclip, Pencil, Plus, Trash2 } from 'lucide-react'
+import { fetchProjects, deleteProject } from '../api/projects'
 import { Project } from '../types'
 import { FileManager } from '../components/FileManager'
 import { ProjectFormModal } from '../components/ProjectFormModal'
+import { useUser } from '../contexts'
 
 const STATUS_LABEL: Record<string, string> = { active: 'Active', completed: 'Completed', draft: 'Draft' }
 const progressColor = (v: number) => v >= 80 ? '#20bf6b' : v >= 40 ? '#3867d6' : '#f0932b'
 
 export function ProjectsPage() {
+  const { user } = useUser()
+  const isAdmin = user?.role === 'admin'
   const [projects, setProjects] = useState<Project[]>([])
   const [fileProject, setFileProject] = useState<Project | null>(null)
   const [formProject, setFormProject] = useState<Project | 'new' | null>(null)
+
+  async function handleDelete(project: Project) {
+    if (!confirm(`Delete project "${project.code} — ${project.title}"? This cannot be undone.`)) return
+    await deleteProject(project.id)
+    setProjects((prev) => prev.filter((p) => p.id !== project.id))
+  }
 
   useEffect(() => {
     fetchProjects().then(setProjects).catch(() => setProjects([]))
@@ -65,6 +74,7 @@ export function ProjectsPage() {
                 <th>Progress</th>
                 <th>Files</th>
                 <th></th>
+                {isAdmin && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -109,6 +119,17 @@ export function ProjectsPage() {
                       <Pencil size={14} />
                     </button>
                   </td>
+                  {isAdmin && (
+                    <td>
+                      <button
+                        className="icon-btn icon-btn-danger"
+                        onClick={() => handleDelete(project)}
+                        title="Delete project"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

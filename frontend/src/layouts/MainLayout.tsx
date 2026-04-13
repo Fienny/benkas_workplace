@@ -36,9 +36,9 @@ export function MainLayout({ children, onLogout }: Props) {
               <FolderKanban size={18} /> Projects
             </NavLink>
             {user?.role === 'admin' && (
-              <a className="nav-item" href="#">
+              <NavLink to="/admin" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
                 <Shield size={18} /> Admin Panel
-              </a>
+              </NavLink>
             )}
           </nav>
         </div>
