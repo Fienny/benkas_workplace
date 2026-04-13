@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Plus, Trash2, ShieldCheck, ShieldOff, UserCheck, UserX } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { fetchUsers, createUser, updateUser, deleteUser, UserCreatePayload } from '../api/users'
 import { useUser } from '../contexts'
 import { User } from '../types'
 
-const ROLE_LABEL: Record<string, string> = { admin: 'Admin', user: 'Engineer' }
-
 const BLANK: UserCreatePayload = { full_name: '', username: '', password: '', role: 'user' }
 
 export function AdminPage() {
+  const { t } = useTranslation()
   const { user: me } = useUser()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,7 +38,7 @@ export function AdminPage() {
       setShowForm(false)
     } catch (err: any) {
       const detail = err?.response?.data?.detail
-      setFormError(typeof detail === 'string' ? detail : 'Failed to create user.')
+      setFormError(typeof detail === 'string' ? detail : t('admin.errorCreate'))
     } finally {
       setSaving(false)
     }
@@ -55,7 +55,7 @@ export function AdminPage() {
   }
 
   async function handleDelete(u: User) {
-    if (!confirm(`Delete user "${u.username}"? This cannot be undone.`)) return
+    if (!confirm(t('admin.confirmDelete', { username: u.username }))) return
     await deleteUser(u.id)
     setUsers((prev) => prev.filter((x) => x.id !== u.id))
   }
@@ -64,33 +64,33 @@ export function AdminPage() {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>Admin Panel</h1>
-          <p>Manage user accounts and permissions</p>
+          <h1>{t('admin.title')}</h1>
+          <p>{t('admin.subtitle')}</p>
         </div>
         <button className="btn-primary" onClick={() => { setShowForm(true); setForm(BLANK); setFormError(null) }}>
-          <Plus size={15} /> New User
+          <Plus size={15} /> {t('admin.newUser')}
         </button>
       </div>
 
       {showForm && (
         <div className="table-card" style={{ marginBottom: 20 }}>
           <div className="table-header">
-            <h3>Create user</h3>
-            <button className="icon-btn" onClick={() => setShowForm(false)} title="Cancel">✕</button>
+            <h3>{t('admin.createUserTitle')}</h3>
+            <button className="icon-btn" onClick={() => setShowForm(false)} title={t('admin.cancel')}>✕</button>
           </div>
           <form className="admin-form" onSubmit={handleCreate}>
             <div className="admin-form-row">
               <div className="form-field">
-                <label>Full name</label>
+                <label>{t('admin.fieldFullName')}</label>
                 <input
                   value={form.full_name}
                   onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                  placeholder="Jane Smith"
+                  placeholder={t('admin.placeholderFullName')}
                   required
                 />
               </div>
               <div className="form-field">
-                <label>Username</label>
+                <label>{t('admin.fieldUsername')}</label>
                 <input
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
@@ -99,30 +99,30 @@ export function AdminPage() {
                 />
               </div>
               <div className="form-field">
-                <label>Password</label>
+                <label>{t('admin.fieldPassword')}</label>
                 <input
                   type="password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="min 4 characters"
+                  placeholder={t('admin.placeholderPassword')}
                   required
                 />
               </div>
               <div className="form-field">
-                <label>Role</label>
+                <label>{t('admin.fieldRole')}</label>
                 <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as 'admin' | 'user' })}>
-                  <option value="user">Engineer</option>
-                  <option value="admin">Admin</option>
+                  <option value="user">{t('admin.roleEngineer')}</option>
+                  <option value="admin">{t('admin.roleAdmin')}</option>
                 </select>
               </div>
             </div>
             {formError && <p className="upload-error" style={{ margin: '8px 0 0' }}>{formError}</p>}
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <button type="submit" className="btn-primary" disabled={saving}>
-                {saving ? 'Creating…' : 'Create user'}
+                {saving ? t('admin.creating') : t('admin.createUser')}
               </button>
               <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>
-                Cancel
+                {t('admin.cancel')}
               </button>
             </div>
           </form>
@@ -131,22 +131,22 @@ export function AdminPage() {
 
       <div className="table-card">
         <div className="table-header">
-          <h3>Users</h3>
-          <span className="table-count">{users.length} total</span>
+          <h3>{t('admin.colUser')}</h3>
+          <span className="table-count">{t('admin.total', { count: users.length })}</span>
         </div>
         {loading ? (
-          <p className="empty-state">Loading…</p>
+          <p className="empty-state">{t('admin.loading')}</p>
         ) : (
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
-                  <th>User</th>
-                  <th>Username</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Joined</th>
-                  <th>Actions</th>
+                  <th>{t('admin.colUser')}</th>
+                  <th>{t('admin.colUsername')}</th>
+                  <th>{t('admin.colRole')}</th>
+                  <th>{t('admin.colStatus')}</th>
+                  <th>{t('admin.colJoined')}</th>
+                  <th>{t('admin.colActions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -158,18 +158,22 @@ export function AdminPage() {
                           {initials(u.full_name)}
                         </div>
                         <span style={{ fontWeight: 500 }}>{u.full_name}</span>
-                        {u.id === me?.id && <span className="region-badge" style={{ background: '#eff6ff', color: '#1d4ed8' }}>you</span>}
+                        {u.id === me?.id && (
+                          <span className="region-badge" style={{ background: '#eff6ff', color: '#1d4ed8' }}>
+                            {t('admin.labelYou')}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td><code className="code-cell">{u.username}</code></td>
                     <td>
                       <span className={`status-chip ${u.role === 'admin' ? 'role-admin' : 'role-user'}`}>
-                        {ROLE_LABEL[u.role]}
+                        {u.role === 'admin' ? t('admin.roleAdmin') : t('admin.roleEngineer')}
                       </span>
                     </td>
                     <td>
                       <span className={`status-chip ${u.is_active ? 'active' : 'draft'}`}>
-                        {u.is_active ? 'Active' : 'Inactive'}
+                        {u.is_active ? t('admin.statusActive') : t('admin.statusInactive')}
                       </span>
                     </td>
                     <td className="muted-cell">
@@ -179,7 +183,7 @@ export function AdminPage() {
                       <div style={{ display: 'flex', gap: 4 }}>
                         <button
                           className="icon-btn"
-                          title={u.role === 'admin' ? 'Demote to Engineer' : 'Promote to Admin'}
+                          title={u.role === 'admin' ? t('admin.tipDemote') : t('admin.tipPromote')}
                           onClick={() => handleToggleRole(u)}
                           disabled={u.id === me?.id}
                         >
@@ -187,7 +191,7 @@ export function AdminPage() {
                         </button>
                         <button
                           className="icon-btn"
-                          title={u.is_active ? 'Deactivate' : 'Activate'}
+                          title={u.is_active ? t('admin.tipDeactivate') : t('admin.tipActivate')}
                           onClick={() => handleToggleActive(u)}
                           disabled={u.id === me?.id}
                         >
@@ -195,7 +199,7 @@ export function AdminPage() {
                         </button>
                         <button
                           className="icon-btn icon-btn-danger"
-                          title="Delete user"
+                          title={t('admin.tipDelete')}
                           onClick={() => handleDelete(u)}
                           disabled={u.id === me?.id}
                         >

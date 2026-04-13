@@ -1,12 +1,15 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
 import { User } from '../types'
+import { setLanguage } from '../i18n'
 
 interface Props {
   onLogin: (user: User) => void
 }
 
 export function LoginPage({ onLogin }: Props) {
+  const { t, i18n } = useTranslation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -22,13 +25,13 @@ export function LoginPage({ onLogin }: Props) {
     } catch (err: any) {
       const status = err?.response?.status
       if (status === 401) {
-        setError('Wrong username or password.')
+        setError(t('login.errorWrongCreds'))
       } else if (status === 422) {
-        setError('Invalid input — check username and password fields.')
+        setError(t('login.errorInvalid'))
       } else if (err?.code === 'ECONNABORTED' || err?.code === 'ERR_NETWORK') {
-        setError('Cannot reach the backend. Is uvicorn running on port 8000?')
+        setError(t('login.errorNetwork'))
       } else {
-        setError('Login failed. Check that the backend is running.')
+        setError(t('login.errorGeneric'))
       }
     } finally {
       setLoading(false)
@@ -38,19 +41,31 @@ export function LoginPage({ onLogin }: Props) {
   return (
     <div className="login-shell">
       <div className="login-card">
-        <div className="login-brand">
-          <div className="brand-logo" style={{ width: 44, height: 44, fontSize: 22 }}>◫</div>
-          <div>
-            <div className="brand-title" style={{ fontSize: 16 }}>Benka's Workbench</div>
-            <div className="brand-subtitle">Engineering Dashboard</div>
+        <div className="login-card-top">
+          <div className="login-brand">
+            <div className="brand-logo" style={{ width: 44, height: 44, fontSize: 22 }}>◫</div>
+            <div>
+              <div className="brand-title" style={{ fontSize: 16 }}>Benka's Workbench</div>
+              <div className="brand-subtitle">{t('nav.subtitle')}</div>
+            </div>
+          </div>
+          <div className="lang-switch">
+            <button
+              className={`lang-btn${i18n.language === 'en' ? ' active' : ''}`}
+              onClick={() => setLanguage('en')}
+            >EN</button>
+            <button
+              className={`lang-btn${i18n.language === 'ru' ? ' active' : ''}`}
+              onClick={() => setLanguage('ru')}
+            >RU</button>
           </div>
         </div>
 
-        <h2 className="login-heading">Sign in</h2>
+        <h2 className="login-heading">{t('login.heading')}</h2>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-field">
-            <label>Username</label>
+            <label>{t('login.username')}</label>
             <input
               type="text"
               value={username}
@@ -62,7 +77,7 @@ export function LoginPage({ onLogin }: Props) {
           </div>
 
           <div className="form-field">
-            <label>Password</label>
+            <label>{t('login.password')}</label>
             <input
               type="password"
               value={password}
@@ -76,12 +91,12 @@ export function LoginPage({ onLogin }: Props) {
           {error && <p className="upload-error">{error}</p>}
 
           <button type="submit" className="btn-primary login-btn" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? t('login.submitting') : t('login.submit')}
           </button>
         </form>
 
         <p className="login-hint">
-          Default: <code>admin</code> / <code>admin</code>
+          {t('login.hint', { user: 'admin', pass: 'admin' })}
         </p>
       </div>
     </div>

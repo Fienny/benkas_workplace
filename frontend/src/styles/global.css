@@ -301,6 +301,23 @@ tr:hover td { background: #fafafa; }
   display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px;
 }
 
+/* ── Language switcher ──────────────────────────────── */
+.lang-switch {
+  display: flex; gap: 2px; flex-shrink: 0;
+}
+.lang-btn {
+  background: none; border: 1px solid #e5e7eb; padding: 3px 8px;
+  border-radius: 6px; font-size: 11px; font-weight: 700; color: #9ca3af;
+  cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px;
+}
+.lang-btn:hover { border-color: #d1d5db; color: #374151; }
+.lang-btn.active { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+
+/* Login page lang switcher row */
+.login-card-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+
 /* ── Role badges ────────────────────────────────────── */
 .status-chip.role-admin { background: #ede9fe; color: #6d28d9; }
 .status-chip.role-user  { background: #e0f2fe; color: #0369a1; }

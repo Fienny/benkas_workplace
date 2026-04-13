@@ -1,0 +1,142 @@
+const ru = {
+  // Боковая панель / разметка
+  nav: {
+    dashboard: 'Обзор',
+    projects: 'Проекты',
+    adminPanel: 'Администрирование',
+    subtitle: 'Инженерная панель',
+    signOut: 'Выйти',
+    administrator: 'Администратор',
+    engineer: 'Инженер',
+  },
+
+  // Вход
+  login: {
+    heading: 'Вход',
+    username: 'Имя пользователя',
+    password: 'Пароль',
+    submit: 'Войти',
+    submitting: 'Вход\u2026',
+    hint: 'По умолчанию: {{user}} / {{pass}}',
+    errorWrongCreds: 'Неверное имя пользователя или пароль.',
+    errorInvalid: 'Неверный ввод \u2014 проверьте поля.',
+    errorNetwork: 'Сервер недоступен. Запущен ли uvicorn на порту 8000?',
+    errorGeneric: 'Ошибка входа. Проверьте, что сервер запущен.',
+  },
+
+  // Панель управления
+  dashboard: {
+    title: 'Панель управления',
+    subtitle: 'Обзор всех проектов, метрик и активности команды',
+    loading: 'Загрузка\u2026',
+    totalProjects: 'Всего проектов',
+    activeProjects: 'Активных проектов',
+    completed: 'Завершено',
+    totalFiles: 'Всего файлов',
+    teamMembers: 'Участников',
+    avgProgress: 'Средний прогресс',
+    byType: 'Проекты по типу',
+    byRegion: 'Проекты по региону',
+    monthlyActivity: 'Активность по месяцам',
+    activeProgress: 'Прогресс активных проектов',
+  },
+
+  // Сокращения месяцев
+  months: {
+    Jan: 'Янв', Feb: 'Фев', Mar: 'Мар', Apr: 'Апр',
+    May: 'Май', Jun: 'Июн', Jul: 'Июл', Aug: 'Авг',
+    Sep: 'Сен', Oct: 'Окт', Nov: 'Ноя', Dec: 'Дек',
+  },
+
+  // Страница проектов
+  projects: {
+    title: 'Проекты',
+    subtitle: 'Нажмите карандаш для редактирования, скрепку — для файлов',
+    newProject: 'Новый проект',
+    total: '{{count}} всего',
+    colCode: 'Код',
+    colTitle: 'Название',
+    colType: 'Тип',
+    colRegion: 'Регион',
+    colStatus: 'Статус',
+    colProgress: 'Прогресс',
+    colFiles: 'Файлы',
+    statusActive: 'Активный',
+    statusCompleted: 'Завершён',
+    statusDraft: 'Черновик',
+    confirmDelete: 'Удалить проект "{{code}} \u2014 {{title}}"? Это нельзя отменить.',
+  },
+
+  // Форма проекта
+  projectForm: {
+    titleNew: 'Новый проект',
+    titleEdit: 'Редактировать проект',
+    fieldCode: 'Код *',
+    fieldRegion: 'Регион *',
+    fieldTitle: 'Название *',
+    fieldType: 'Тип *',
+    fieldStatus: 'Статус',
+    fieldProgress: 'Прогресс \u2014 {{value}}%',
+    fieldDueDate: 'Срок сдачи',
+    fieldDescription: 'Описание',
+    placeholderType: 'Проект / ТУ / \u2026',
+    placeholderNotes: 'Примечания\u2026',
+    statusActive: 'Активный',
+    statusDraft: 'Черновик',
+    statusCompleted: 'Завершён',
+    cancel: 'Отмена',
+    saving: 'Сохранение\u2026',
+    saveChanges: 'Сохранить',
+    createProject: 'Создать проект',
+    errorSave: 'Ошибка сохранения. Проверьте поля и попробуйте снова.',
+  },
+
+  // Менеджер файлов
+  fileManager: {
+    title: 'Файлы',
+    uploading: 'Загрузка\u2026',
+    clickToUpload: 'Нажмите для загрузки файла',
+    noFiles: 'Файлов пока нет.',
+    errorUpload: 'Ошибка загрузки. Попробуйте снова.',
+    errorDelete: 'Ошибка удаления.',
+  },
+
+  // Администрирование
+  admin: {
+    title: 'Панель администратора',
+    subtitle: 'Управление учётными записями и правами доступа',
+    newUser: 'Новый пользователь',
+    createUserTitle: 'Создать пользователя',
+    fieldFullName: 'Полное имя',
+    fieldUsername: 'Имя пользователя',
+    fieldPassword: 'Пароль',
+    fieldRole: 'Роль',
+    roleAdmin: 'Администратор',
+    roleEngineer: 'Инженер',
+    colUser: 'Пользователь',
+    colUsername: 'Логин',
+    colRole: 'Роль',
+    colStatus: 'Статус',
+    colJoined: 'Дата регистрации',
+    colActions: 'Действия',
+    statusActive: 'Активен',
+    statusInactive: 'Неактивен',
+    labelYou: 'вы',
+    total: '{{count}} всего',
+    loading: 'Загрузка\u2026',
+    creating: 'Создание\u2026',
+    createUser: 'Создать',
+    cancel: 'Отмена',
+    errorCreate: 'Не удалось создать пользователя.',
+    tipPromote: 'Повысить до администратора',
+    tipDemote: 'Понизить до инженера',
+    tipDeactivate: 'Деактивировать',
+    tipActivate: 'Активировать',
+    tipDelete: 'Удалить пользователя',
+    confirmDelete: 'Удалить пользователя "{{username}}"? Это нельзя отменить.',
+    placeholderFullName: 'Иван Иванов',
+    placeholderPassword: 'минимум 4 символа',
+  },
+}
+
+export default ru

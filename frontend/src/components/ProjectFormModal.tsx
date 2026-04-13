@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Project } from '../types'
 import { createProject, updateProject, ProjectPayload } from '../api/projects'
 
 interface Props {
-  project?: Project        // if set → edit mode, else → create mode
+  project?: Project
   onClose: () => void
   onSaved: (project: Project) => void
 }
-
-const STATUS_OPTIONS = ['active', 'draft', 'completed']
 
 const EMPTY: ProjectPayload = {
   code: '',
@@ -23,10 +22,17 @@ const EMPTY: ProjectPayload = {
 }
 
 export function ProjectFormModal({ project, onClose, onSaved }: Props) {
+  const { t } = useTranslation()
   const isEdit = !!project
   const [form, setForm] = useState<ProjectPayload>(EMPTY)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const STATUS_OPTIONS = [
+    { value: 'active',    label: t('projectForm.statusActive') },
+    { value: 'draft',     label: t('projectForm.statusDraft') },
+    { value: 'completed', label: t('projectForm.statusCompleted') },
+  ]
 
   useEffect(() => {
     if (project) {
@@ -73,7 +79,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
       onSaved(saved)
     } catch (err: any) {
       const detail = err?.response?.data?.detail
-      setError(typeof detail === 'string' ? detail : 'Save failed. Check all fields and try again.')
+      setError(typeof detail === 'string' ? detail : t('projectForm.errorSave'))
     } finally {
       setSaving(false)
     }
@@ -84,7 +90,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
       <div className="form-modal" onClick={(e) => e.stopPropagation()}>
         <div className="file-manager-head">
           <div>
-            <h3>{isEdit ? 'Edit Project' : 'New Project'}</h3>
+            <h3>{isEdit ? t('projectForm.titleEdit') : t('projectForm.titleNew')}</h3>
             {isEdit && <p className="file-manager-sub">{project!.code}</p>}
           </div>
           <button className="icon-btn" onClick={onClose} type="button"><X size={18} /></button>
@@ -93,7 +99,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
         <form className="project-form" onSubmit={handleSubmit}>
           <div className="form-row two">
             <div className="form-field">
-              <label>Code *</label>
+              <label>{t('projectForm.fieldCode')}</label>
               <input
                 value={form.code}
                 onChange={(e) => set('code', e.target.value.toUpperCase())}
@@ -103,7 +109,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
               />
             </div>
             <div className="form-field">
-              <label>Region *</label>
+              <label>{t('projectForm.fieldRegion')}</label>
               <input
                 value={form.region}
                 onChange={(e) => set('region', e.target.value)}
@@ -115,22 +121,22 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
           </div>
 
           <div className="form-field">
-            <label>Title *</label>
+            <label>{t('projectForm.fieldTitle')}</label>
             <input
               value={form.title}
               onChange={(e) => set('title', e.target.value)}
-              placeholder="Project title"
+              placeholder={t('projectForm.fieldTitle')}
               required
               maxLength={255}
             />
           </div>
 
           <div className="form-field">
-            <label>Type *</label>
+            <label>{t('projectForm.fieldType')}</label>
             <input
               value={form.type}
               onChange={(e) => set('type', e.target.value)}
-              placeholder="Project / Special Technical Conditions / …"
+              placeholder={t('projectForm.placeholderType')}
               required
               maxLength={120}
             />
@@ -138,15 +144,15 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
 
           <div className="form-row two">
             <div className="form-field">
-              <label>Status</label>
+              <label>{t('projectForm.fieldStatus')}</label>
               <select value={form.status} onChange={(e) => set('status', e.target.value)}>
                 {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                  <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </select>
             </div>
             <div className="form-field">
-              <label>Progress — {form.progress}%</label>
+              <label>{t('projectForm.fieldProgress', { value: form.progress })}</label>
               <input
                 type="range"
                 min={0}
@@ -160,7 +166,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
 
           <div className="form-row two">
             <div className="form-field">
-              <label>Due Date</label>
+              <label>{t('projectForm.fieldDueDate')}</label>
               <input
                 type="date"
                 value={form.due_date ?? ''}
@@ -171,11 +177,11 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
           </div>
 
           <div className="form-field">
-            <label>Description</label>
+            <label>{t('projectForm.fieldDescription')}</label>
             <textarea
               value={form.description ?? ''}
               onChange={(e) => set('description', e.target.value)}
-              placeholder="Optional notes…"
+              placeholder={t('projectForm.placeholderNotes')}
               rows={3}
             />
           </div>
@@ -184,10 +190,10 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
 
           <div className="form-actions">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>
-              Cancel
+              {t('projectForm.cancel')}
             </button>
             <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Project'}
+              {saving ? t('projectForm.saving') : isEdit ? t('projectForm.saveChanges') : t('projectForm.createProject')}
             </button>
           </div>
         </form>

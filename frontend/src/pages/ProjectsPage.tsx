@@ -1,26 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Paperclip, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { fetchProjects, deleteProject } from '../api/projects'
 import { Project } from '../types'
 import { FileManager } from '../components/FileManager'
 import { ProjectFormModal } from '../components/ProjectFormModal'
 import { useUser } from '../contexts'
 
-const STATUS_LABEL: Record<string, string> = { active: 'Active', completed: 'Completed', draft: 'Draft' }
 const progressColor = (v: number) => v >= 80 ? '#20bf6b' : v >= 40 ? '#3867d6' : '#f0932b'
 
 export function ProjectsPage() {
+  const { t } = useTranslation()
   const { user } = useUser()
   const isAdmin = user?.role === 'admin'
   const [projects, setProjects] = useState<Project[]>([])
   const [fileProject, setFileProject] = useState<Project | null>(null)
   const [formProject, setFormProject] = useState<Project | 'new' | null>(null)
-
-  async function handleDelete(project: Project) {
-    if (!confirm(`Delete project "${project.code} — ${project.title}"? This cannot be undone.`)) return
-    await deleteProject(project.id)
-    setProjects((prev) => prev.filter((p) => p.id !== project.id))
-  }
 
   useEffect(() => {
     fetchProjects().then(setProjects).catch(() => setProjects([]))
@@ -45,34 +40,46 @@ export function ProjectsPage() {
     setFormProject(null)
   }
 
+  async function handleDelete(project: Project) {
+    if (!confirm(t('projects.confirmDelete', { code: project.code, title: project.title }))) return
+    await deleteProject(project.id)
+    setProjects((prev) => prev.filter((p) => p.id !== project.id))
+  }
+
+  const STATUS_LABEL: Record<string, string> = {
+    active:    t('projects.statusActive'),
+    completed: t('projects.statusCompleted'),
+    draft:     t('projects.statusDraft'),
+  }
+
   return (
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>Projects</h1>
-          <p>Click the pencil to edit, the paperclip to manage files</p>
+          <h1>{t('projects.title')}</h1>
+          <p>{t('projects.subtitle')}</p>
         </div>
         <button className="btn-primary" onClick={() => setFormProject('new')}>
-          <Plus size={15} /> New Project
+          <Plus size={15} /> {t('projects.newProject')}
         </button>
       </div>
 
       <div className="table-card">
         <div className="table-header">
-          <h3>Projects</h3>
-          <span className="table-count">{projects.length} total</span>
+          <h3>{t('projects.title')}</h3>
+          <span className="table-count">{t('projects.total', { count: projects.length })}</span>
         </div>
         <div className="table-scroll">
           <table>
             <thead>
               <tr>
-                <th>Code</th>
-                <th>Title</th>
-                <th>Type</th>
-                <th>Region</th>
-                <th>Status</th>
-                <th>Progress</th>
-                <th>Files</th>
+                <th>{t('projects.colCode')}</th>
+                <th>{t('projects.colTitle')}</th>
+                <th>{t('projects.colType')}</th>
+                <th>{t('projects.colRegion')}</th>
+                <th>{t('projects.colStatus')}</th>
+                <th>{t('projects.colProgress')}</th>
+                <th>{t('projects.colFiles')}</th>
                 <th></th>
                 {isAdmin && <th></th>}
               </tr>
@@ -104,7 +111,7 @@ export function ProjectsPage() {
                     <button
                       className="file-btn"
                       onClick={() => setFileProject(project)}
-                      title="Manage files"
+                      title={t('projects.colFiles')}
                     >
                       <Paperclip size={14} />
                       {project.file_count > 0 && <span className="file-count">{project.file_count}</span>}
@@ -114,7 +121,7 @@ export function ProjectsPage() {
                     <button
                       className="icon-btn"
                       onClick={() => setFormProject(project)}
-                      title="Edit project"
+                      title={t('projectForm.titleEdit')}
                     >
                       <Pencil size={14} />
                     </button>
@@ -124,7 +131,7 @@ export function ProjectsPage() {
                       <button
                         className="icon-btn icon-btn-danger"
                         onClick={() => handleDelete(project)}
-                        title="Delete project"
+                        title={t('admin.tipDelete')}
                       >
                         <Trash2 size={14} />
                       </button>
