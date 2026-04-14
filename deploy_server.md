@@ -5,32 +5,32 @@
 Recommended production topology:
 
 ```
-Internet → Nginx (80/443) → Frontend static files
-                          → /api/v1/* reverse proxy → Uvicorn (8000)
-                                                    → PostgreSQL (5432, internal)
+Internet → Nginx (80/443) → Frontend static files (dist/)
+                          → /api/* reverse proxy → Uvicorn (8000)
+                                                 → PostgreSQL (5432, internal)
 ```
 
 ---
 
 ## 1. Environment variables
 
-Create `/home/<user>/benkas_worplace/backend/.env` (do NOT commit this file):
+Create `backend/.env` on the server (do NOT commit this file):
 
 ```env
-APP_NAME=Benka Workbench
 APP_ENV=production
 SECRET_KEY=<long-random-string>          # openssl rand -hex 32
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
 DATABASE_URL=postgresql+psycopg://postgres:<password>@db:5432/benka_workbench
 STORAGE_PATH=/app/storage
 CORS_ORIGINS=https://yourdomain.com
 ```
 
+Session cookies are signed with `SECRET_KEY` — keep it secret and stable (changing it logs everyone out).
+
 ---
 
 ## 2. Docker Compose (full stack)
 
-Extend `docker-compose.yml` for production — add the frontend build:
+`docker-compose.yml`:
 
 ```yaml
 services:
@@ -56,7 +56,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.prod       # see below
+      dockerfile: Dockerfile.prod
     restart: always
     ports:
       - "80:80"
@@ -97,65 +97,73 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Proxy API calls to backend
+    # Proxy API + health to backend
     location /api/ {
         proxy_pass http://backend:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Required for cookie sessions
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Proxy health check
     location /health {
         proxy_pass http://backend:8000;
     }
 }
 ```
 
-> When using Nginx proxy, update the frontend API base URL (`frontend/src/api/client.ts`)
-> to use a relative path `/api/v1` instead of `http://localhost:8000/api/v1`.
+The Vite proxy in `frontend/vite.config.ts` is only for local dev — in production, Nginx handles `/api` → backend.
 
 ---
 
-## 3. Seed production database
-
-Run once after first deploy:
+## 3. Build and start
 
 ```bash
+# First deploy
+docker compose up -d --build
+
+# Seed the database (run once after first deploy)
 docker compose exec backend python -m app.seed
 ```
 
-Then **change the default passwords immediately** via the API or directly in the database.
+**Change default passwords immediately** after seeding — via Admin Panel in the app or directly in the DB.
 
 ---
 
 ## 4. HTTPS with Let's Encrypt
-
-Use [Certbot](https://certbot.eff.org/) with the Nginx plugin:
 
 ```bash
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d yourdomain.com
 ```
 
+Certbot will rewrite Nginx config to redirect HTTP → HTTPS automatically.
+
+After enabling HTTPS, update `backend/.env`:
+```
+CORS_ORIGINS=https://yourdomain.com
+```
+
 ---
 
 ## 5. File storage
 
-Currently files are stored on the local filesystem (`STORAGE_PATH`).  
-For multi-instance or cloud deployments, migrate to object storage:
+Files are stored on the local filesystem at `STORAGE_PATH`.
+Make sure this path is on a persistent Docker volume (see `docker-compose.yml` above).
 
-- **MinIO** (self-hosted S3-compatible): add a `minio` service to Docker Compose
-- **AWS S3**: replace `StorageService` in `backend/app/services/storage.py` with `boto3`
+For multi-instance or cloud deployments, replace `backend/app/services/storage.py` with an S3/MinIO implementation.
 
 ---
 
-## 6. Checklist before going live
+## 6. Pre-launch checklist
 
 - [ ] `SECRET_KEY` is a random 32+ byte string (never the default)
 - [ ] `APP_ENV=production` in `.env`
-- [ ] Database password is strong and not the default `postgres`
-- [ ] HTTPS is configured
-- [ ] `CORS_ORIGINS` only lists your actual frontend domain
-- [ ] Default seed passwords changed or accounts removed
-- [ ] `storage/` directory is on a persistent volume
-- [ ] Backups scheduled for PostgreSQL (`pg_dump` cron or managed DB service)
+- [ ] `DATABASE_URL` points to your production database with a strong password
+- [ ] `CORS_ORIGINS` lists only your actual frontend domain (no localhost)
+- [ ] HTTPS configured and HTTP redirects to HTTPS
+- [ ] Default seed credentials changed or users deleted
+- [ ] `storage/` directory is on a persistent Docker volume
+- [ ] PostgreSQL backups scheduled (`pg_dump` cron, or use a managed database service)
+- [ ] Server firewall: only ports 80/443 exposed to the internet; 8000 and 5432 internal only
