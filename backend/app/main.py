@@ -25,7 +25,7 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=settings.secret_key,
     same_site='lax',
-    https_only=settings.app_env == 'production',
+    https_only=settings.https_only,
     max_age=60 * 60 * 24 * 30,  # 30 days
 )
 

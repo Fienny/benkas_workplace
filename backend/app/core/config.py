@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     app_name: str = 'Benka Workbench API'
     app_env: str = 'development'
+    https_only: bool = False
     secret_key: str = Field(..., alias='SECRET_KEY')
     database_url: str = Field(..., alias='DATABASE_URL')
     storage_path: str = 'storage'

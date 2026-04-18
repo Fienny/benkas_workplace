@@ -2,10 +2,10 @@ services:
   db:
     image: postgres:16
     restart: always
+    env_file: ./backend/.env          # reads POSTGRES_PASSWORD from the same file
     environment:
       POSTGRES_DB: benka_workbench
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env or environment}
     volumes:
       - pg_data:/var/lib/postgresql/data
     # Port NOT exposed — only reachable by backend inside Docker network
