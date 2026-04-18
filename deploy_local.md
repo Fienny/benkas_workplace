@@ -26,7 +26,9 @@ git pull origin claude/finish-dashboard-wJqb0
 
 ## Step 1 — Create the backend `.env` file
 
-Create `backend/.env` (this file is gitignored — create it manually once):
+Create `backend/.env` (this file is gitignored — create it manually once).
+
+**Option A — local filesystem storage (no Wasabi needed):**
 
 ```env
 APP_ENV=development
@@ -35,6 +37,25 @@ DATABASE_URL=sqlite:///./benka.db
 STORAGE_PATH=storage
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000
 ```
+
+Uploaded files are saved to `backend/storage/`. Fine for quick testing.
+
+**Option B — Wasabi S3 storage (matches production):**
+
+```env
+APP_ENV=development
+SECRET_KEY=dev-secret-key-change-in-production
+DATABASE_URL=sqlite:///./benka.db
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000
+
+WASABI_BUCKET=your-bucket-name
+WASABI_ENDPOINT=https://s3.wasabisys.com
+WASABI_ACCESS_KEY=your-access-key
+WASABI_SECRET_KEY=your-secret-key
+WASABI_REGION=us-east-1
+```
+
+When `WASABI_BUCKET` is set, all uploads go to Wasabi and downloads redirect to a 1-hour presigned URL. Use this to test the full production flow locally.
 
 ---
 
@@ -145,15 +166,15 @@ uvicorn app.main:app --reload --port 8000
 
 ## `.env` reference
 
-| Variable        | Default value                                              | Notes                   |
-|-----------------|------------------------------------------------------------|-------------------------|
-| `APP_ENV`       | `development`                                              |                         |
-| `SECRET_KEY`    | `dev-secret-key-change-in-production`                      | Change before prod!     |
-| `DATABASE_URL`  | `sqlite:///./benka.db`                                     | SQLite (local dev)      |
-| `STORAGE_PATH`  | `storage`                                                  | Relative to backend dir |
-| `CORS_ORIGINS`  | `http://localhost:5173,http://127.0.0.1:5173,...`          |                         |
-
-For PostgreSQL (production), use:
-```
-DATABASE_URL=postgresql+psycopg://postgres:<password>@localhost:5432/benka_workbench
-```
+| Variable           | Default value                                     | Notes                            |
+|--------------------|---------------------------------------------------|----------------------------------|
+| `APP_ENV`          | `development`                                     |                                  |
+| `SECRET_KEY`       | `dev-secret-key-change-in-production`             | Change before prod!              |
+| `DATABASE_URL`     | `sqlite:///./benka.db`                            | SQLite (local) or PostgreSQL URL |
+| `STORAGE_PATH`     | `storage`                                         | Used only when WASABI_BUCKET unset |
+| `CORS_ORIGINS`     | `http://localhost:5173,...`                       | Comma-separated                  |
+| `WASABI_BUCKET`    | _(empty — local filesystem)_                      | Set to enable S3 storage         |
+| `WASABI_ENDPOINT`  | `https://s3.wasabisys.com`                        | Change for your Wasabi region    |
+| `WASABI_ACCESS_KEY`| _(empty)_                                         | From Wasabi Console → Access Keys|
+| `WASABI_SECRET_KEY`| _(empty)_                                         |                                  |
+| `WASABI_REGION`    | `us-east-1`                                       |                                  |
