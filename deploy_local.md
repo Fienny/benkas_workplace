@@ -26,7 +26,17 @@ git pull origin claude/finish-dashboard-wJqb0
 
 ## Step 1 — Create the backend `.env` file
 
-Create `backend/.env` (this file is gitignored — create it manually once).
+Create a file named `.env` directly inside the `backend` folder:
+
+```
+benka_workbench/
+└── backend/
+    └── .env    ← create this file here
+```
+
+Full path on your machine: `D:\benka_dev\benka_workbench\backend\.env`
+
+This file is gitignored — you create it once manually, it never gets committed.
 
 **Option A — local filesystem storage (no Wasabi needed):**
 
