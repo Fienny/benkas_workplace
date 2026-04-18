@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     app_name: str = 'Benka Workbench API'
     app_env: str = 'development'
     secret_key: str = Field(..., alias='SECRET_KEY')
-    access_token_expire_minutes: int = 60 * 24
     database_url: str = Field(..., alias='DATABASE_URL')
     storage_path: str = 'storage'
     cors_origins: List[str] | str = Field(default_factory=lambda: ['http://localhost:3000'])
