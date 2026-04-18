@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -67,7 +67,15 @@ def upload_file(
 def download_file(file_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     _ = current_user
     record = db.get(ProjectFile, file_id)
-    if not record or not Path(record.file_path).exists():
+    if not record:
+        raise HTTPException(status_code=404, detail='File not found')
+
+    url = storage_service.presigned_url(record.file_path, record.original_name)
+    if url:
+        return RedirectResponse(url)
+
+    # Local filesystem fallback
+    if not Path(record.file_path).exists():
         raise HTTPException(status_code=404, detail='File not found')
     return FileResponse(record.file_path, media_type=record.content_type, filename=record.original_name)
 

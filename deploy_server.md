@@ -20,9 +20,17 @@ Create `backend/.env` on the server (do NOT commit this file):
 APP_ENV=production
 SECRET_KEY=<long-random-string>          # openssl rand -hex 32
 DATABASE_URL=postgresql+psycopg://postgres:<password>@db:5432/benka_workbench
-STORAGE_PATH=/app/storage
 CORS_ORIGINS=https://yourdomain.com
+
+# Wasabi S3 storage
+WASABI_BUCKET=your-bucket-name
+WASABI_ENDPOINT=https://s3.wasabisys.com          # change region if needed, e.g. https://s3.eu-central-1.wasabisys.com
+WASABI_ACCESS_KEY=your-access-key
+WASABI_SECRET_KEY=your-secret-key
+WASABI_REGION=us-east-1
 ```
+
+Wasabi endpoint by region: `us-east-1` → `s3.wasabisys.com`, `us-east-2` → `s3.us-east-2.wasabisys.com`, `eu-central-1` → `s3.eu-central-1.wasabisys.com`, etc.
 
 Session cookies are signed with `SECRET_KEY` — keep it secret and stable (changing it logs everyone out).
 
@@ -149,10 +157,9 @@ CORS_ORIGINS=https://yourdomain.com
 
 ## 5. File storage
 
-Files are stored on the local filesystem at `STORAGE_PATH`.
-Make sure this path is on a persistent Docker volume (see `docker-compose.yml` above).
+Files are stored in Wasabi S3. No persistent Docker volume needed — files survive container restarts and redeploys automatically.
 
-For multi-instance or cloud deployments, replace `backend/app/services/storage.py` with an S3/MinIO implementation.
+For local development without Wasabi credentials, leave `WASABI_BUCKET` unset in `.env` and the app falls back to local filesystem storage.
 
 ---
 

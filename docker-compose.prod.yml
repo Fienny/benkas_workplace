@@ -16,8 +16,6 @@ services:
     env_file: ./backend/.env
     depends_on:
       - db
-    volumes:
-      - file_storage:/app/storage
 
   frontend:
     build:
@@ -31,4 +29,3 @@ services:
 
 volumes:
   pg_data:
-  file_storage:

@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     storage_path: str = 'storage'
     cors_origins: List[str] | str = Field(default_factory=lambda: ['http://localhost:3000'])
 
+    # Wasabi / S3 — leave blank to use local filesystem (local dev)
+    wasabi_bucket: str = ''
+    wasabi_endpoint: str = 'https://s3.wasabisys.com'
+    wasabi_access_key: str = ''
+    wasabi_secret_key: str = ''
+    wasabi_region: str = 'us-east-1'
+
     @field_validator('cors_origins', mode='before')
     @classmethod
     def parse_cors_origins(cls, value: str | List[str]):
