@@ -7,7 +7,7 @@ services:
       POSTGRES_DB: benka_workbench
       POSTGRES_USER: postgres
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - benka_pg_data:/var/lib/postgresql/data
     # Port NOT exposed — only reachable by backend inside Docker network
 
   backend:
@@ -28,4 +28,5 @@ services:
       - backend
 
 volumes:
-  pg_data:
+  benka_pg_data:
+    external: true
