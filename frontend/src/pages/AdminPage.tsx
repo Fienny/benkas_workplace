@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Plus, Trash2, ShieldCheck, ShieldOff, UserCheck, UserX } from 'lucide-react'
+import { Pencil, Plus, Trash2, ShieldCheck, ShieldOff, UserCheck, UserX } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { fetchUsers, createUser, updateUser, deleteUser, UserCreatePayload } from '../api/users'
 import { useUser } from '../contexts'
 import { User } from '../types'
 
 const BLANK: UserCreatePayload = { full_name: '', username: '', password: '', role: 'user' }
+
+interface EditForm { full_name: string; username: string; password: string }
 
 export function AdminPage() {
   const { t } = useTranslation()
@@ -16,6 +18,10 @@ export function AdminPage() {
   const [form, setForm] = useState<UserCreatePayload>(BLANK)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [editUser, setEditUser] = useState<User | null>(null)
+  const [editForm, setEditForm] = useState<EditForm>({ full_name: '', username: '', password: '' })
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchUsers()
@@ -52,6 +58,31 @@ export function AdminPage() {
   async function handleToggleRole(u: User) {
     const updated = await updateUser(u.id, { role: u.role === 'admin' ? 'user' : 'admin' })
     setUsers((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
+  }
+
+  function openEdit(u: User) {
+    setEditUser(u)
+    setEditForm({ full_name: u.full_name, username: u.username, password: '' })
+    setEditError(null)
+  }
+
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editUser) return
+    setEditSaving(true)
+    setEditError(null)
+    try {
+      const payload: Record<string, string> = { full_name: editForm.full_name, username: editForm.username }
+      if (editForm.password) payload.password = editForm.password
+      const updated = await updateUser(editUser.id, payload)
+      setUsers((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
+      setEditUser(null)
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      setEditError(typeof detail === 'string' ? detail : t('admin.errorCreate'))
+    } finally {
+      setEditSaving(false)
+    }
   }
 
   async function handleDelete(u: User) {
@@ -129,6 +160,43 @@ export function AdminPage() {
         </div>
       )}
 
+      {editUser && (
+        <div className="table-card" style={{ marginBottom: 20 }}>
+          <div className="table-header">
+            <h3>{t('admin.editUserTitle')} — {editUser.username}</h3>
+            <button className="icon-btn" onClick={() => setEditUser(null)}>✕</button>
+          </div>
+          <form className="admin-form" onSubmit={handleEdit}>
+            <div className="admin-form-row">
+              <div className="form-field">
+                <label>{t('admin.fieldFullName')}</label>
+                <input value={editForm.full_name} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} required />
+              </div>
+              <div className="form-field">
+                <label>{t('admin.fieldUsername')}</label>
+                <input value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} required />
+              </div>
+              <div className="form-field">
+                <label>{t('admin.fieldNewPassword')}</label>
+                <input
+                  type="password"
+                  value={editForm.password}
+                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                  placeholder={t('admin.placeholderNewPassword')}
+                />
+              </div>
+            </div>
+            {editError && <p className="upload-error" style={{ margin: '8px 0 0' }}>{editError}</p>}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button type="submit" className="btn-primary" disabled={editSaving}>
+                {editSaving ? t('admin.saving') : t('admin.saveChanges')}
+              </button>
+              <button type="button" className="btn-secondary" onClick={() => setEditUser(null)}>{t('admin.cancel')}</button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="table-card">
         <div className="table-header">
           <h3>{t('admin.colUser')}</h3>
@@ -181,6 +249,13 @@ export function AdminPage() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 4 }}>
+                        <button
+                          className="icon-btn"
+                          title={t('admin.tipEdit')}
+                          onClick={() => openEdit(u)}
+                        >
+                          <Pencil size={14} />
+                        </button>
                         <button
                           className="icon-btn"
                           title={u.role === 'admin' ? t('admin.tipDemote') : t('admin.tipPromote')}

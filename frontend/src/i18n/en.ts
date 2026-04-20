@@ -175,9 +175,15 @@ const en = {
     tipDeactivate: 'Deactivate',
     tipActivate: 'Activate',
     tipDelete: 'Delete user',
+    tipEdit: 'Edit user',
     confirmDelete: 'Delete user "{{username}}"? This cannot be undone.',
     placeholderFullName: 'Jane Smith',
     placeholderPassword: 'min 4 characters',
+    editUserTitle: 'Edit user',
+    fieldNewPassword: 'New password',
+    placeholderNewPassword: 'leave blank to keep current',
+    saving: 'Saving…',
+    saveChanges: 'Save changes',
   },
 }
 

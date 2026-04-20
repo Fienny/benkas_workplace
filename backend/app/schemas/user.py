@@ -27,3 +27,6 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     role: Optional[UserRole] = None
+    full_name: Optional[str] = Field(None, min_length=2, max_length=255)
+    username: Optional[str] = Field(None, min_length=2, max_length=100)
+    password: Optional[str] = Field(None, min_length=4)

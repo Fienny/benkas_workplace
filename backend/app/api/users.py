@@ -60,6 +60,14 @@ def update_user(
         user.is_active = payload.is_active
     if payload.role is not None:
         user.role = payload.role
+    if payload.full_name is not None:
+        user.full_name = payload.full_name
+    if payload.username is not None:
+        if db.scalar(select(User).where(User.username == payload.username, User.id != user_id)):
+            raise HTTPException(status_code=400, detail='Username already taken')
+        user.username = payload.username
+    if payload.password is not None:
+        user.password_hash = hash_password(payload.password)
     log_action(db, admin, 'user.update', user.username)
     db.commit()
     db.refresh(user)

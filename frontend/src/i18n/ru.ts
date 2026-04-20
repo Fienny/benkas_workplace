@@ -175,9 +175,15 @@ const ru = {
     tipDeactivate: 'Деактивировать',
     tipActivate: 'Активировать',
     tipDelete: 'Удалить пользователя',
+    tipEdit: 'Редактировать пользователя',
     confirmDelete: 'Удалить пользователя "{{username}}"? Это нельзя отменить.',
     placeholderFullName: 'Иван Иванов',
     placeholderPassword: 'минимум 4 символа',
+    editUserTitle: 'Редактировать пользователя',
+    fieldNewPassword: 'Новый пароль',
+    placeholderNewPassword: 'оставьте пустым, чтобы не менять',
+    saving: 'Сохранение…',
+    saveChanges: 'Сохранить',
   },
 }
 
