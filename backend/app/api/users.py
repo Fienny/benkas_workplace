@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, require_admin
 from app.core.security import hash_password
 from app.db.session import get_db
+from app.models.file import ProjectFile
+from app.models.folder import ProjectFolder
+from app.models.project import Project
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.services.audit import log_action
@@ -74,6 +77,11 @@ def delete_user(
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail='User not found')
+    # Reassign owned records to the admin before deleting to avoid FK violations
+    db.execute(update(Project).where(Project.owner_id == user_id).values(owner_id=admin.id))
+    db.execute(update(Project).where(Project.responsible_id == user_id).values(responsible_id=None))
+    db.execute(update(ProjectFile).where(ProjectFile.uploaded_by == user_id).values(uploaded_by=admin.id))
+    db.execute(update(ProjectFolder).where(ProjectFolder.created_by == user_id).values(created_by=admin.id))
     username = user.username
     db.delete(user)
     log_action(db, admin, 'user.delete', username)

@@ -1,6 +1,6 @@
-import { Activity, FolderKanban, LayoutDashboard, LogOut, Shield } from 'lucide-react'
+import { Activity, FolderKanban, LayoutDashboard, LogOut, Menu, Shield, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts'
 import { api } from '../api/client'
@@ -14,35 +14,46 @@ interface Props {
 export function MainLayout({ children, onLogout }: Props) {
   const { user } = useUser()
   const { t, i18n } = useTranslation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const initials = user
     ? user.full_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
     : '?'
 
+  function closeSidebar() { setSidebarOpen(false) }
+
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      <div className="mobile-header">
+        <button className="icon-btn" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
+        <span className="brand-title">Benka's Workbench</span>
+      </div>
+
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={closeSidebar} />}
+
+      <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
         <div>
           <div className="brand">
             <div className="brand-logo">◫</div>
-            <div>
+            <div style={{ flex: 1 }}>
               <div className="brand-title">Benka's Workbench</div>
               <div className="brand-subtitle">{t('nav.subtitle')}</div>
             </div>
+            <button className="icon-btn sidebar-close-btn" onClick={closeSidebar}><X size={18} /></button>
           </div>
 
           <nav className="nav-menu">
-            <NavLink to="/" end className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+            <NavLink to="/" end className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')} onClick={closeSidebar}>
               <LayoutDashboard size={18} /> {t('nav.dashboard')}
             </NavLink>
-            <NavLink to="/projects" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+            <NavLink to="/projects" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')} onClick={closeSidebar}>
               <FolderKanban size={18} /> {t('nav.projects')}
             </NavLink>
-            <NavLink to="/activity" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+            <NavLink to="/activity" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')} onClick={closeSidebar}>
               <Activity size={18} /> {t('nav.activity')}
             </NavLink>
             {user?.role === 'admin' && (
-              <NavLink to="/admin" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+              <NavLink to="/admin" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')} onClick={closeSidebar}>
                 <Shield size={18} /> {t('nav.adminPanel')}
               </NavLink>
             )}
