@@ -19,7 +19,10 @@ class Project(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    responsible_id: Mapped[int | None] = mapped_column(ForeignKey('users.id'), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
-    owner = relationship('User', back_populates='projects')
+    # two FKs to the same table — must specify foreign_keys on both sides
+    owner = relationship('User', foreign_keys=[owner_id], back_populates='projects')
+    responsible = relationship('User', foreign_keys=[responsible_id])
     files = relationship('ProjectFile', back_populates='project', cascade='all, delete-orphan')

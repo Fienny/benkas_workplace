@@ -1,13 +1,9 @@
 import axios from 'axios'
 
+// Relative URL — Vite dev server proxies /api → http://127.0.0.1:8000
+// withCredentials lets the session cookie travel with every request
 export const api = axios.create({
-  baseURL: 'http://localhost:8000/api/v1',
-})
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
+  baseURL: '/api/v1',
+  timeout: 8000,
+  withCredentials: true,
 })

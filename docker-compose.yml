@@ -1,3 +1,5 @@
+# Local development only — SQLite is simpler (see deploy_local.md)
+# Use docker-compose.prod.yml for production.
 services:
   db:
     image: postgres:16
@@ -6,7 +8,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"   # bound to localhost only
     volumes:
       - pg_data:/var/lib/postgresql/data
 
@@ -19,7 +21,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./backend:/app
+      - ./backend:/app   # source mount for hot-reload
 
 volumes:
   pg_data:

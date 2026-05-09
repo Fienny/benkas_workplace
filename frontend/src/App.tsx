@@ -3,32 +3,49 @@ import { useEffect, useState } from 'react'
 import { MainLayout } from './layouts/MainLayout'
 import { DashboardPage } from './pages/DashboardPage'
 import { ProjectsPage } from './pages/ProjectsPage'
-import { loginDemo } from './api/auth'
+import { AdminPage } from './pages/AdminPage'
+import { ActivityPage } from './pages/ActivityPage'
+import { ProjectDetailPage } from './pages/ProjectDetailPage'
+import { LoginPage } from './pages/LoginPage'
+import { fetchMe } from './api/users'
+import { UserContext } from './contexts'
+import { User } from './types'
 
 export default function App() {
-  const [ready, setReady] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [checking, setChecking] = useState(true)
 
+  // On load, check if there's an active session
   useEffect(() => {
-    async function bootstrap() {
-      const token = localStorage.getItem('access_token')
-      if (!token) {
-        await loginDemo()
-      }
-      setReady(true)
-    }
-    bootstrap().catch(() => setReady(true))
+    fetchMe()
+      .then(setUser)
+      .catch(() => setUser(null))
+      .finally(() => setChecking(false))
   }, [])
 
-  if (!ready) {
-    return <div style={{ padding: 24 }}>Loading...</div>
+  if (checking) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#6b7280', fontFamily: 'Inter, sans-serif', fontSize: 14 }}>
+        Loading…
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <LoginPage onLogin={setUser} />
   }
 
   return (
-    <MainLayout>
-      <Routes>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-      </Routes>
-    </MainLayout>
+    <UserContext.Provider value={{ user }}>
+      <MainLayout onLogout={() => setUser(null)}>
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:id" element={<ProjectDetailPage />} />
+          <Route path="/activity" element={<ActivityPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+        </Routes>
+      </MainLayout>
+    </UserContext.Provider>
   )
 }

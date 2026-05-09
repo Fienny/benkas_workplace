@@ -21,6 +21,48 @@ export type Project = {
   description?: string | null
   due_date?: string | null
   owner_id: number
+  responsible_id?: number | null
+  responsible_name?: string | null
   created_at: string
   file_count: number
+}
+
+export type ProjectFile = {
+  id: number
+  project_id: number
+  folder_id: number | null
+  uploaded_by: number
+  original_name: string
+  stored_name: string
+  content_type: string | null
+  file_size: number
+  file_path: string
+  created_at: string
+}
+
+export type ProjectFolder = {
+  id: number
+  project_id: number
+  name: string
+  created_by: number
+  created_at: string
+}
+
+export type User = {
+  id: number
+  full_name: string
+  username: string
+  role: 'admin' | 'user'
+  is_active: boolean
+  created_at: string
+}
+
+export type AuditLog = {
+  id: number
+  user_id: number
+  user_name: string
+  action: string
+  entity_label: string
+  context_label: string | null
+  created_at: string
 }

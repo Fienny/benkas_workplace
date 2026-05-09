@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Activity, CircleCheck, Files, FolderOpen, TrendingUp, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { fetchDashboard } from '../api/dashboard'
@@ -12,7 +13,18 @@ import { DashboardResponse, Project } from '../types'
 const icons = [<FolderOpen size={18} />, <Activity size={18} />, <CircleCheck size={18} />, <Files size={18} />, <Users size={18} />, <TrendingUp size={18} />]
 const chartColors = ['#3867d6', '#20bf6b', '#f0932b', '#eb4d4b', '#8854d0', '#0fb9b1']
 
+// Map backend label → translation key
+const METRIC_KEYS: Record<string, string> = {
+  'Total Projects':   'dashboard.totalProjects',
+  'Active Projects':  'dashboard.activeProjects',
+  'Completed':        'dashboard.completed',
+  'Total Files':      'dashboard.totalFiles',
+  'Team Members':     'dashboard.teamMembers',
+  'Avg Progress':     'dashboard.avgProgress',
+}
+
 export function DashboardPage() {
+  const { t } = useTranslation()
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
 
@@ -23,7 +35,7 @@ export function DashboardPage() {
         setDashboard(dashboardData)
         setProjects(projectData)
       } catch {
-        localStorage.setItem('access_token', '')
+        // session expired — App will handle redirect via fetchMe
       }
     }
     load()
@@ -31,16 +43,25 @@ export function DashboardPage() {
 
   const metricCards = useMemo(() => dashboard?.metrics ?? [], [dashboard])
 
+  // Translate month abbreviations returned by the backend
+  const translatedActivity = useMemo(() =>
+    (dashboard?.monthly_activity ?? []).map((row) => ({
+      ...row,
+      month: t(`months.${row.month}`, row.month),
+    })),
+    [dashboard, t]
+  )
+
   if (!dashboard) {
-    return <div className="page"><h1>Loading dashboard...</h1></div>
+    return <div className="page"><h1>{t('dashboard.loading')}</h1></div>
   }
 
   return (
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>Dashboard</h1>
-          <p>Overview of all projects, metrics and team activity</p>
+          <h1>{t('dashboard.title')}</h1>
+          <p>{t('dashboard.subtitle')}</p>
         </div>
       </div>
 
@@ -48,7 +69,7 @@ export function DashboardPage() {
         {metricCards.map((card, index) => (
           <StatCard
             key={card.label}
-            title={card.label}
+            title={t(METRIC_KEYS[card.label] ?? card.label)}
             value={card.label === 'Avg Progress' ? `${card.value}%` : card.value}
             icon={icons[index]}
           />
@@ -56,7 +77,7 @@ export function DashboardPage() {
       </div>
 
       <div className="charts-grid two-columns">
-        <ChartCard title="Projects by Type">
+        <ChartCard title={t('dashboard.byType')}>
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie data={dashboard.projects_by_type} dataKey="value" nameKey="label" innerRadius={55} outerRadius={85} label>
@@ -67,7 +88,7 @@ export function DashboardPage() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Projects by Region">
+        <ChartCard title={t('dashboard.byRegion')}>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={dashboard.projects_by_region}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -81,9 +102,9 @@ export function DashboardPage() {
       </div>
 
       <div className="charts-grid two-columns">
-        <ChartCard title="Monthly Activity">
+        <ChartCard title={t('dashboard.monthlyActivity')}>
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={dashboard.monthly_activity}>
+            <LineChart data={translatedActivity}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" />
               <YAxis allowDecimals={false} />
@@ -95,7 +116,7 @@ export function DashboardPage() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Active Projects Progress">
+        <ChartCard title={t('dashboard.activeProgress')}>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={dashboard.active_project_progress} layout="vertical" margin={{ left: 30 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />

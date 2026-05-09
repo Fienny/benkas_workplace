@@ -8,6 +8,7 @@ from app.models.file import ProjectFile
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.services.audit import log_action
 
 router = APIRouter(prefix='/projects', tags=['projects'])
 
@@ -28,6 +29,7 @@ def list_projects(
     for project, file_count in rows:
         item = ProjectResponse.model_validate(project)
         item.file_count = file_count
+        item.responsible_name = project.responsible.full_name if project.responsible else None
         result.append(item)
     return result
 
@@ -35,15 +37,16 @@ def list_projects(
 @router.post('', response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
     payload: ProjectCreate,
-    _: User = Depends(require_admin),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     existing = db.scalar(select(Project).where(Project.code == payload.code))
     if existing:
         raise HTTPException(status_code=400, detail='Project code already exists')
 
-    project = Project(**payload.model_dump())
+    project = Project(**payload.model_dump(), owner_id=current_user.id)
     db.add(project)
+    log_action(db, current_user, 'project.create', payload.code)
     db.commit()
     db.refresh(project)
     response = ProjectResponse.model_validate(project)
@@ -65,6 +68,7 @@ def get_project(project_id: int, current_user: User = Depends(get_current_user),
     project, file_count = row
     response = ProjectResponse.model_validate(project)
     response.file_count = file_count
+    response.responsible_name = project.responsible.full_name if project.responsible else None
     return response
 
 
@@ -72,31 +76,41 @@ def get_project(project_id: int, current_user: User = Depends(get_current_user),
 def update_project(
     project_id: int,
     payload: ProjectUpdate,
-    _: User = Depends(require_admin),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
 
-    for key, value in payload.model_dump(exclude_unset=True).items():
+    updates = payload.model_dump(exclude_unset=True)
+    if 'code' in updates and updates['code'] != project.code:
+        clash = db.scalar(select(Project).where(Project.code == updates['code']))
+        if clash:
+            raise HTTPException(status_code=400, detail='Project code already exists')
+
+    for key, value in updates.items():
         setattr(project, key, value)
 
+    log_action(db, current_user, 'project.update', project.code)
     db.commit()
     db.refresh(project)
     response = ProjectResponse.model_validate(project)
     response.file_count = db.scalar(select(func.count(ProjectFile.id)).where(ProjectFile.project_id == project.id)) or 0
+    response.responsible_name = project.responsible.full_name if project.responsible else None
     return response
 
 
 @router.delete('/{project_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_project(
     project_id: int,
-    _: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
+    code = project.code
     db.delete(project)
+    log_action(db, admin, 'project.delete', code)
     db.commit()

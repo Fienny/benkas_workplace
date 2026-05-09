@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    env_file: ./backend/.env          # reads POSTGRES_PASSWORD from the same file
+    environment:
+      POSTGRES_DB: benka_workbench
+      POSTGRES_USER: postgres
+    volumes:
+      - benka_pg_data:/var/lib/postgresql/data
+    # Port NOT exposed — only reachable by backend inside Docker network
+
+  backend:
+    build: ./backend
+    restart: always
+    env_file: ./backend/.env
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  benka_pg_data:
+    external: true
