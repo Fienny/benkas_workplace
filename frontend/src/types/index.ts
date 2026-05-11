@@ -52,7 +52,7 @@ export type User = {
   id: number
   full_name: string
   username: string
-  role: 'admin' | 'user'
+  role: 'admin' | 'user' | 'client'
   is_active: boolean
   created_at: string
 }

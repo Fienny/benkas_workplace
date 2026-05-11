@@ -65,7 +65,7 @@ export function MainLayout({ children, onLogout }: Props) {
             <div className="avatar">{initials}</div>
             <div className="user-info">
               <div className="user-name">{user?.full_name ?? '—'}</div>
-              <div className="user-role">{user?.role === 'admin' ? t('nav.administrator') : t('nav.engineer')}</div>
+              <div className="user-role">{user?.role === 'admin' ? t('nav.administrator') : user?.role === 'client' ? t('admin.roleClient') : t('nav.engineer')}</div>
             </div>
           </div>
           <div className="lang-switch">

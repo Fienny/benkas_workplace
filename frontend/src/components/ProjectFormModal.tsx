@@ -41,7 +41,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
   ]
 
   useEffect(() => {
-    fetchUsers().then(setUsers).catch(() => setUsers([]))
+    fetchUsers().then((list) => setUsers(list.filter((u) => u.role !== 'client'))).catch(() => setUsers([]))
   }, [])
 
   useEffect(() => {
