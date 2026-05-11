@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronRight, Folder, FolderPlus, File, Trash2, Upload, X, Check, Download } from 'lucide-react'
+import { ArrowLeft, BarChart3, Boxes, Check, ChevronRight, Download, File, Folder, FolderCheck, FolderPlus, Trash2, Upload, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts'
 import { api } from '../api/client'
 import { fetchProjectFiles, uploadFile, deleteFile, downloadUrl } from '../api/files'
-import { fetchFolders, createFolder, deleteFolder } from '../api/folders'
-import { Project, ProjectFile, ProjectFolder } from '../types'
+import { fetchFolders, createFolder, deleteFolder, updateFolder } from '../api/folders'
+import { fetchProjectKpis } from '../api/projects'
+import { Project, ProjectFile, ProjectFolder, ProjectKpis } from '../types'
 import { ProjectFormModal } from '../components/ProjectFormModal'
+import { StatCard } from '../components/StatCard'
 
 function formatBytes(b: number) {
   if (b < 1024) return `${b} B`
@@ -28,6 +30,9 @@ export function ProjectDetailPage() {
   const [folders, setFolders] = useState<ProjectFolder[]>([])
   const [files, setFiles] = useState<ProjectFile[]>([])
   const [currentFolder, setCurrentFolder] = useState<ProjectFolder | null>(null)
+  const [activeTab, setActiveTab] = useState<'files' | 'dashboard'>('files')
+  const [kpis, setKpis] = useState<ProjectKpis | null>(null)
+  const [kpiLoading, setKpiLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,8 +48,9 @@ export function ProjectDetailPage() {
   const isAdmin = user?.role === 'admin'
   const isClient = user?.role === 'client'
   const isLead = project?.responsible_id === user?.id
-  const canManageProject = !isClient && (isAdmin || isLead)
-  const canManageFiles = !isClient
+  const isOwner = project?.owner_id === user?.id
+  const canManageProject = !isClient && (isAdmin || isLead || isOwner)
+  const canManageFiles = canManageProject
 
   async function load() {
     setLoading(true)
@@ -65,6 +71,22 @@ export function ProjectDetailPage() {
   }
 
   useEffect(() => { load() }, [projectId])
+
+  async function loadKpis() {
+    setKpiLoading(true)
+    setError(null)
+    try {
+      setKpis(await fetchProjectKpis(projectId))
+    } catch {
+      setError(t('detail.kpiError'))
+    } finally {
+      setKpiLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'dashboard' && project) loadKpis()
+  }, [activeTab, projectId, project?.id])
 
   // Files shown in current view
   const visibleFiles = files.filter((f) =>
@@ -112,6 +134,19 @@ export function ProjectDetailPage() {
       setFolderError(typeof detail === 'string' ? detail : t('detail.folderError'))
     } finally {
       setFolderSaving(false)
+    }
+  }
+
+  async function handleUpdateFolder(folder: ProjectFolder, updates: Partial<Pick<ProjectFolder, 'is_object_folder' | 'progress'>>) {
+    setError(null)
+    try {
+      const updated = await updateFolder(projectId, folder.id, updates)
+      setFolders((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
+      setCurrentFolder((prev) => (prev?.id === updated.id ? updated : prev))
+      if (activeTab === 'dashboard') loadKpis()
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      setError(typeof detail === 'string' ? detail : t('detail.folderUpdateError'))
     }
   }
 
@@ -179,7 +214,41 @@ export function ProjectDetailPage() {
         </div>
       </div>
 
+      <div className="detail-tabs">
+        <button className={`detail-tab${activeTab === 'files' ? ' active' : ''}`} onClick={() => setActiveTab('files')}>
+          <Folder size={14} /> {t('detail.filesTab')}
+        </button>
+        <button className={`detail-tab${activeTab === 'dashboard' ? ' active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+          <BarChart3 size={14} /> {t('detail.dashboardTab')}
+        </button>
+      </div>
+
+      {activeTab === 'dashboard' && (
+        <div className="table-card">
+          {error && (
+            <div className="detail-error">
+              {error}
+              <button className="icon-btn" onClick={() => setError(null)} style={{ marginLeft: 8 }}><X size={14} /></button>
+            </div>
+          )}
+          {kpiLoading || !kpis ? (
+            <p className="empty-state">{t('dashboard.loading')}</p>
+          ) : (
+            <div className="stats-grid kpi-grid">
+              <StatCard title={t('detail.kpiTotalFiles')} value={kpis.total_files} icon={<File size={18} />} />
+              <StatCard title={t('detail.kpiTotalFolders')} value={kpis.total_folders} icon={<Folder size={18} />} />
+              <StatCard title={t('detail.kpiPlannedObjects')} value={kpis.planned_objects_count} icon={<Boxes size={18} />} />
+              <StatCard title={t('detail.kpiObjectFolders')} value={kpis.object_folders_created} icon={<FolderCheck size={18} />} />
+              <StatCard title={t('detail.kpiMissingObjectFolders')} value={kpis.missing_object_folders} icon={<FolderPlus size={18} />} />
+              <StatCard title={t('detail.kpiAverageObjectProgress')} value={`${kpis.average_object_progress}%`} icon={<BarChart3 size={18} />} />
+              <StatCard title={t('detail.kpiProjectProgress')} value={`${kpis.project_progress}%`} icon={<Check size={18} />} />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── File manager ── */}
+      {activeTab === 'files' && (
       <div className="table-card">
         {/* Toolbar */}
         <div className="detail-toolbar">
@@ -261,6 +330,34 @@ export function ProjectDetailPage() {
               <Folder size={16} className="fm-icon fm-icon-folder" />
               <span className="fm-name">{folder.name}</span>
               <span className="fm-meta">{t('detail.fileCount', { count })}</span>
+              <span className="fm-meta object-folder-indicator">
+                {folder.is_object_folder ? t('detail.objectFolder') : t('detail.regularFolder')}
+              </span>
+              {canManageProject && (
+                <label className="object-folder-toggle" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={folder.is_object_folder}
+                    onChange={(e) => handleUpdateFolder(folder, { is_object_folder: e.target.checked })}
+                  />
+                  {t('detail.objectFolderShort')}
+                </label>
+              )}
+              {(folder.is_object_folder || canManageProject) && (
+                <div className="folder-progress-control" onClick={(e) => e.stopPropagation()}>
+                  <span>{folder.progress}%</span>
+                  {canManageProject && (
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={folder.progress}
+                      onChange={(e) => handleUpdateFolder(folder, { progress: Number(e.target.value) })}
+                      title={t('detail.folderProgress')}
+                    />
+                  )}
+                </div>
+              )}
               <span className="fm-date">{new Date(folder.created_at).toLocaleDateString()}</span>
               {canManageProject && (
                 <button
@@ -309,6 +406,7 @@ export function ProjectDetailPage() {
           ))
         )}
       </div>
+      )}
 
       {editOpen && project && (
         <ProjectFormModal

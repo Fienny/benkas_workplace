@@ -1,5 +1,5 @@
 import { api } from './client'
-import { Project } from '../types'
+import { Project, ProjectKpis } from '../types'
 
 export async function fetchProjects(): Promise<Project[]> {
   const { data } = await api.get<Project[]>('/projects')
@@ -13,6 +13,7 @@ export interface ProjectPayload {
   region: string
   status: string
   progress: number
+  planned_objects_count: number
   description?: string
   due_date?: string
   responsible_id?: number | null
@@ -30,4 +31,10 @@ export async function updateProject(id: number, payload: Partial<ProjectPayload>
 
 export async function deleteProject(id: number): Promise<void> {
   await api.delete(`/projects/${id}`)
+}
+
+
+export async function fetchProjectKpis(id: number): Promise<ProjectKpis> {
+  const { data } = await api.get<ProjectKpis>(`/projects/${id}/kpis`)
+  return data
 }

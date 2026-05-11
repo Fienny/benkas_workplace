@@ -6,9 +6,10 @@ from app.api.deps import get_current_user, require_admin, require_project_access
 from app.db.session import get_db
 from app.models.client_project_access import ClientProjectAccess
 from app.models.file import ProjectFile
+from app.models.folder import ProjectFolder
 from app.models.project import Project
 from app.models.user import User, UserRole
-from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.schemas.project import ProjectCreate, ProjectKpiResponse, ProjectResponse, ProjectUpdate
 from app.services.audit import log_action
 
 router = APIRouter(prefix='/projects', tags=['projects'])
@@ -67,6 +68,44 @@ def create_project(
     response = ProjectResponse.model_validate(project)
     response.file_count = 0
     return response
+
+
+@router.get('/{project_id}/kpis', response_model=ProjectKpiResponse)
+def get_project_kpis(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = db.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail='Project not found')
+    require_project_access(current_user, project)
+
+    total_files = db.scalar(select(func.count(ProjectFile.id)).where(ProjectFile.project_id == project_id)) or 0
+    total_folders = db.scalar(select(func.count(ProjectFolder.id)).where(ProjectFolder.project_id == project_id)) or 0
+    object_folders_created = db.scalar(
+        select(func.count(ProjectFolder.id)).where(
+            ProjectFolder.project_id == project_id,
+            ProjectFolder.is_object_folder.is_(True),
+        )
+    ) or 0
+    average_object_progress = db.scalar(
+        select(func.avg(ProjectFolder.progress)).where(
+            ProjectFolder.project_id == project_id,
+            ProjectFolder.is_object_folder.is_(True),
+        )
+    ) or 0
+
+    average_object_progress = round(float(average_object_progress), 2)
+    return ProjectKpiResponse(
+        total_files=total_files,
+        total_folders=total_folders,
+        planned_objects_count=project.planned_objects_count,
+        object_folders_created=object_folders_created,
+        missing_object_folders=project.planned_objects_count - object_folders_created,
+        average_object_progress=average_object_progress,
+        project_progress=average_object_progress,
+    )
 
 
 @router.get('/{project_id}', response_model=ProjectResponse)

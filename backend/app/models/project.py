@@ -16,6 +16,7 @@ class Project(Base):
     region: Mapped[str] = mapped_column(String(50), index=True)
     status: Mapped[str] = mapped_column(String(50), default='active', index=True)
     progress: Mapped[int] = mapped_column(Integer, default=0)
+    planned_objects_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey('users.id'))

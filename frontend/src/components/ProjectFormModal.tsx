@@ -19,6 +19,7 @@ const EMPTY: ProjectPayload = {
   region: '',
   status: 'active',
   progress: 0,
+  planned_objects_count: 0,
   description: '',
   due_date: '',
   responsible_id: null,
@@ -53,6 +54,7 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
         region: project.region,
         status: project.status,
         progress: project.progress,
+        planned_objects_count: project.planned_objects_count ?? 0,
         description: project.description ?? '',
         due_date: project.due_date ?? '',
         responsible_id: project.responsible_id ?? null,
@@ -184,6 +186,18 @@ export function ProjectFormModal({ project, onClose, onSaved }: Props) {
                 onChange={(e) => set('due_date', e.target.value)}
               />
             </div>
+            <div className="form-field">
+              <label>{t('projectForm.fieldPlannedObjects')}</label>
+              <input
+                type="number"
+                min={0}
+                value={form.planned_objects_count}
+                onChange={(e) => set('planned_objects_count', Math.max(0, Number(e.target.value) || 0))}
+              />
+            </div>
+          </div>
+
+          <div className="form-row two">
             <div className="form-field">
               <label>{t('projectForm.fieldLead')}</label>
               {isAdmin ? (

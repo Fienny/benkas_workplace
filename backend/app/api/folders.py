@@ -8,7 +8,7 @@ from app.models.file import ProjectFile
 from app.models.folder import ProjectFolder
 from app.models.project import Project
 from app.models.user import User, UserRole
-from app.schemas.folder import ProjectFolderCreate, ProjectFolderResponse
+from app.schemas.folder import ProjectFolderCreate, ProjectFolderResponse, ProjectFolderUpdate
 
 router = APIRouter(prefix='/projects', tags=['folders'])
 
@@ -50,8 +50,48 @@ def create_folder(
     )):
         raise HTTPException(status_code=400, detail='A folder with this name already exists')
 
-    folder = ProjectFolder(project_id=project_id, name=payload.name, created_by=current_user.id)
+    folder = ProjectFolder(
+        project_id=project_id,
+        name=payload.name,
+        is_object_folder=payload.is_object_folder,
+        progress=payload.progress,
+        created_by=current_user.id,
+    )
     db.add(folder)
+    db.commit()
+    db.refresh(folder)
+    return folder
+
+
+@router.patch('/{project_id}/folders/{folder_id}', response_model=ProjectFolderResponse)
+def update_folder(
+    project_id: int,
+    folder_id: int,
+    payload: ProjectFolderUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = db.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail='Project not found')
+    require_project_write_access(current_user, project)
+
+    folder = db.get(ProjectFolder, folder_id)
+    if not folder or folder.project_id != project_id:
+        raise HTTPException(status_code=404, detail='Folder not found')
+
+    updates = payload.model_dump(exclude_unset=True)
+    if 'name' in updates and updates['name'] != folder.name:
+        if db.scalar(select(ProjectFolder).where(
+            ProjectFolder.project_id == project_id,
+            ProjectFolder.name == updates['name'],
+            ProjectFolder.id != folder_id,
+        )):
+            raise HTTPException(status_code=400, detail='A folder with this name already exists')
+
+    for key, value in updates.items():
+        setattr(folder, key, value)
+
     db.commit()
     db.refresh(folder)
     return folder
