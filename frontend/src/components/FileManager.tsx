@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Paperclip, Trash2, Upload, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { ProjectFile } from '../types'
+import { useUser } from '../contexts'
 import { deleteFile, downloadUrl, fetchProjectFiles, uploadFile } from '../api/files'
 
 function formatBytes(bytes: number): string {
@@ -23,6 +24,8 @@ interface Props {
 
 export function FileManager({ projectId, projectCode, onClose, onFileCountChange }: Props) {
   const { t } = useTranslation()
+  const { user } = useUser()
+  const canManageFiles = user?.role !== 'client'
   const [files, setFiles] = useState<ProjectFile[]>([])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,11 +77,13 @@ export function FileManager({ projectId, projectCode, onClose, onFileCountChange
           <button className="icon-btn" onClick={onClose}><X size={18} /></button>
         </div>
 
-        <div className="file-upload-zone" onClick={() => inputRef.current?.click()}>
-          <Upload size={20} />
-          <span>{uploading ? t('fileManager.uploading') : t('fileManager.clickToUpload')}</span>
-          <input ref={inputRef} type="file" hidden onChange={handleUpload} disabled={uploading} />
-        </div>
+        {canManageFiles && (
+          <div className="file-upload-zone" onClick={() => inputRef.current?.click()}>
+            <Upload size={20} />
+            <span>{uploading ? t('fileManager.uploading') : t('fileManager.clickToUpload')}</span>
+            <input ref={inputRef} type="file" hidden onChange={handleUpload} disabled={uploading} />
+          </div>
+        )}
 
         {error && <p className="upload-error">{error}</p>}
 
@@ -95,9 +100,11 @@ export function FileManager({ projectId, projectCode, onClose, onFileCountChange
                   </a>
                   <span className="file-meta">{formatBytes(f.file_size)} · {formatDate(f.created_at)}</span>
                 </div>
-                <button className="icon-btn icon-btn-danger" onClick={() => handleDelete(f.id)} title={t('admin.tipDelete')}>
-                  <Trash2 size={14} />
-                </button>
+                {canManageFiles && (
+                  <button className="icon-btn icon-btn-danger" onClick={() => handleDelete(f.id)} title={t('admin.tipDelete')}>
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </li>
             ))}
           </ul>

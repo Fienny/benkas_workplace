@@ -18,6 +18,7 @@ export type Project = {
   region: string
   status: string
   progress: number
+  planned_objects_count: number
   description?: string | null
   due_date?: string | null
   owner_id: number
@@ -44,6 +45,8 @@ export type ProjectFolder = {
   id: number
   project_id: number
   name: string
+  is_object_folder: boolean
+  progress: number
   created_by: number
   created_at: string
 }
@@ -52,7 +55,7 @@ export type User = {
   id: number
   full_name: string
   username: string
-  role: 'admin' | 'user'
+  role: 'admin' | 'user' | 'client'
   is_active: boolean
   created_at: string
 }
@@ -65,4 +68,15 @@ export type AuditLog = {
   entity_label: string
   context_label: string | null
   created_at: string
+}
+
+
+export type ProjectKpis = {
+  total_files: number
+  total_folders: number
+  planned_objects_count: number
+  object_folders_created: number
+  missing_object_folders: number
+  average_object_progress: number
+  project_progress: number
 }

@@ -51,6 +51,12 @@ export function DashboardPage() {
     })),
     [dashboard, t]
   )
+  const hasProjects = projects.length > 0
+  const hasMonthlyActivity = translatedActivity.some((row) => row.filesUploaded > 0 || row.newProjects > 0)
+
+  function EmptyChart() {
+    return <p className="empty-state dashboard-empty-chart">{t('dashboard.emptyScoped')}</p>
+  }
 
   if (!dashboard) {
     return <div className="page"><h1>{t('dashboard.loading')}</h1></div>
@@ -76,8 +82,15 @@ export function DashboardPage() {
         ))}
       </div>
 
+      {!hasProjects && (
+        <div className="table-card dashboard-empty-card">
+          <p className="empty-state">{t('dashboard.emptyScoped')}</p>
+        </div>
+      )}
+
       <div className="charts-grid two-columns">
         <ChartCard title={t('dashboard.byType')}>
+          {dashboard.projects_by_type.length === 0 ? <EmptyChart /> : (
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie data={dashboard.projects_by_type} dataKey="value" nameKey="label" innerRadius={55} outerRadius={85} label>
@@ -86,9 +99,11 @@ export function DashboardPage() {
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
+          )}
         </ChartCard>
 
         <ChartCard title={t('dashboard.byRegion')}>
+          {dashboard.projects_by_region.length === 0 ? <EmptyChart /> : (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={dashboard.projects_by_region}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -98,11 +113,13 @@ export function DashboardPage() {
               <Bar dataKey="value" fill="#3867d6" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+          )}
         </ChartCard>
       </div>
 
       <div className="charts-grid two-columns">
         <ChartCard title={t('dashboard.monthlyActivity')}>
+          {!hasMonthlyActivity ? <EmptyChart /> : (
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={translatedActivity}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -114,9 +131,11 @@ export function DashboardPage() {
               <Line type="monotone" dataKey="newProjects" stroke="#20bf6b" strokeWidth={3} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
+          )}
         </ChartCard>
 
         <ChartCard title={t('dashboard.activeProgress')}>
+          {dashboard.active_project_progress.length === 0 ? <EmptyChart /> : (
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={dashboard.active_project_progress} layout="vertical" margin={{ left: 30 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
@@ -128,6 +147,7 @@ export function DashboardPage() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          )}
         </ChartCard>
       </div>
 

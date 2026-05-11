@@ -1,6 +1,8 @@
 import { api } from './client'
 import { User } from '../types'
 
+export type UserRole = 'admin' | 'user' | 'client'
+
 export async function fetchMe(): Promise<User> {
   const { data } = await api.get<User>('/users/me')
   return data
@@ -15,7 +17,7 @@ export interface UserCreatePayload {
   full_name: string
   username: string
   password: string
-  role: 'admin' | 'user'
+  role: UserRole
 }
 
 export async function createUser(payload: UserCreatePayload): Promise<User> {
@@ -23,11 +25,24 @@ export async function createUser(payload: UserCreatePayload): Promise<User> {
   return data
 }
 
-export async function updateUser(id: number, payload: { is_active?: boolean; role?: 'admin' | 'user' }): Promise<User> {
+export async function updateUser(
+  id: number,
+  payload: { is_active?: boolean; role?: UserRole; full_name?: string; username?: string; password?: string },
+): Promise<User> {
   const { data } = await api.patch<User>(`/users/${id}`, payload)
   return data
 }
 
 export async function deleteUser(id: number): Promise<void> {
   await api.delete(`/users/${id}`)
+}
+
+export async function fetchUserProjectAccess(userId: number): Promise<number[]> {
+  const { data } = await api.get<number[]>(`/users/${userId}/project-access`)
+  return data
+}
+
+export async function updateUserProjectAccess(userId: number, projectIds: number[]): Promise<number[]> {
+  const { data } = await api.put<number[]>(`/users/${userId}/project-access`, { project_ids: projectIds })
+  return data
 }
