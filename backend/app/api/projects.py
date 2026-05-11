@@ -2,11 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, require_admin
+from app.api.deps import get_current_user, require_admin, require_project_access, require_project_write_access
 from app.db.session import get_db
+from app.models.client_project_access import ClientProjectAccess
 from app.models.file import ProjectFile
 from app.models.project import Project
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.services.audit import log_action
 
@@ -18,12 +19,23 @@ def list_projects(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _ = current_user
-    rows = db.execute(
+    query = (
         select(Project, func.count(ProjectFile.id).label('file_count'))
         .outerjoin(ProjectFile, Project.id == ProjectFile.project_id)
-        .group_by(Project.id)
-        .order_by(Project.created_at.desc())
+    )
+
+    if current_user.role == UserRole.user:
+        query = query.where(
+            (Project.owner_id == current_user.id) | (Project.responsible_id == current_user.id)
+        )
+    elif current_user.role == UserRole.client:
+        query = query.join(
+            ClientProjectAccess,
+            ClientProjectAccess.project_id == Project.id,
+        ).where(ClientProjectAccess.user_id == current_user.id)
+
+    rows = db.execute(
+        query.group_by(Project.id).order_by(Project.created_at.desc())
     ).all()
     result = []
     for project, file_count in rows:
@@ -40,6 +52,9 @@ def create_project(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    if current_user.role == UserRole.client:
+        raise HTTPException(status_code=403, detail='Clients cannot create projects')
+
     existing = db.scalar(select(Project).where(Project.code == payload.code))
     if existing:
         raise HTTPException(status_code=400, detail='Project code already exists')
@@ -66,6 +81,7 @@ def get_project(project_id: int, current_user: User = Depends(get_current_user),
     if not row:
         raise HTTPException(status_code=404, detail='Project not found')
     project, file_count = row
+    require_project_access(current_user, project)
     response = ProjectResponse.model_validate(project)
     response.file_count = file_count
     response.responsible_name = project.responsible.full_name if project.responsible else None
@@ -82,6 +98,7 @@ def update_project(
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
+    require_project_write_access(current_user, project)
 
     updates = payload.model_dump(exclude_unset=True)
     if 'code' in updates and updates['code'] != project.code:
