@@ -5,9 +5,10 @@ from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_project_access
 from app.db.session import get_db
 from app.models.file import ProjectFile
+from app.models.folder import ProjectFolder
 from app.models.project import Project
 from app.models.user import User, UserRole
 from app.schemas.file import FileResponse as FileSchema
@@ -21,9 +22,14 @@ storage_service = StorageService()
 @router.get('/project/{project_id}', response_model=list[FileSchema])
 def list_project_files(
     project_id: int,
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    project = db.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail='Project not found')
+    require_project_access(current_user, project)
+
     return list(
         db.scalars(
             select(ProjectFile)
@@ -44,6 +50,12 @@ def upload_file(
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
+    require_project_access(current_user, project)
+
+    if folder_id is not None:
+        folder = db.get(ProjectFolder, folder_id)
+        if not folder or folder.project_id != project_id:
+            raise HTTPException(status_code=400, detail='Folder does not belong to this project')
 
     stored_name, file_path, file_size = storage_service.save(file)
     record = ProjectFile(
@@ -65,10 +77,13 @@ def upload_file(
 
 @router.get('/{file_id}/download')
 def download_file(file_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    _ = current_user
     record = db.get(ProjectFile, file_id)
     if not record:
         raise HTTPException(status_code=404, detail='File not found')
+    project = db.get(Project, record.project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail='Project not found')
+    require_project_access(current_user, project)
 
     url = storage_service.presigned_url(record.file_path, record.original_name)
     if url:
@@ -87,7 +102,10 @@ def delete_file(file_id: int, current_user: User = Depends(get_current_user), db
         raise HTTPException(status_code=404, detail='File not found')
 
     project = db.get(Project, record.project_id)
-    is_project_lead = project and project.responsible_id == current_user.id
+    if not project:
+        raise HTTPException(status_code=404, detail='Project not found')
+    require_project_access(current_user, project)
+    is_project_lead = project.responsible_id == current_user.id
 
     if (
         current_user.role != UserRole.admin

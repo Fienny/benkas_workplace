@@ -26,3 +26,4 @@ class Project(Base):
     owner = relationship('User', foreign_keys=[owner_id], back_populates='projects')
     responsible = relationship('User', foreign_keys=[responsible_id])
     files = relationship('ProjectFile', back_populates='project', cascade='all, delete-orphan')
+    client_accesses = relationship('ClientProjectAccess', back_populates='project', cascade='all, delete-orphan')
