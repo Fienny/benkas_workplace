@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { MainLayout } from './layouts/MainLayout'
 import { DashboardPage } from './pages/DashboardPage'
@@ -43,7 +43,7 @@ export default function App() {
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:id" element={<ProjectDetailPage />} />
           <Route path="/activity" element={<ActivityPage />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin" element={user.role === 'admin' ? <AdminPage /> : <Navigate to="/" replace />} />
         </Routes>
       </MainLayout>
     </UserContext.Provider>
