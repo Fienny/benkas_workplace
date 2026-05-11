@@ -138,6 +138,10 @@ const en = {
     objectFolderShort: 'Object',
     folderProgress: 'Folder progress',
     folderUpdateError: 'Could not update folder.',
+    objectProgressChart: 'Object progress',
+    plannedVsCreatedChart: 'Planned vs created objects',
+    filesPerObjectChart: 'Files per object folder',
+    noObjectFolders: 'No object folders yet.',
     download: 'Download',
   },
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, BarChart3, Boxes, Check, ChevronRight, Download, File, Folder, FolderCheck, FolderPlus, Trash2, Upload, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +10,8 @@ import { fetchProjectKpis } from '../api/projects'
 import { Project, ProjectFile, ProjectFolder, ProjectKpis } from '../types'
 import { ProjectFormModal } from '../components/ProjectFormModal'
 import { StatCard } from '../components/StatCard'
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { ChartCard } from '../components/ChartCard'
 
 function formatBytes(b: number) {
   if (b < 1024) return `${b} B`
@@ -92,6 +94,30 @@ export function ProjectDetailPage() {
   const visibleFiles = files.filter((f) =>
     currentFolder ? f.folder_id === currentFolder.id : f.folder_id == null
   )
+
+  const objectFolders = useMemo(
+    () => folders.filter((folder) => folder.is_object_folder),
+    [folders]
+  )
+  const objectProgressData = useMemo(
+    () => objectFolders.map((folder) => ({ name: folder.name, progress: folder.progress })),
+    [objectFolders]
+  )
+  const filesPerObjectData = useMemo(
+    () => objectFolders.map((folder) => ({
+      name: folder.name,
+      files: files.filter((file) => file.folder_id === folder.id).length,
+    })),
+    [files, objectFolders]
+  )
+  const plannedCreatedData = useMemo(() => {
+    if (!kpis) return []
+    return [
+      { label: t('detail.kpiPlannedObjects'), value: kpis.planned_objects_count },
+      { label: t('detail.kpiObjectFolders'), value: kpis.object_folders_created },
+      { label: t('detail.kpiMissingObjectFolders'), value: kpis.missing_object_folders },
+    ]
+  }, [kpis, t])
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -234,6 +260,67 @@ export function ProjectDetailPage() {
           {kpiLoading || !kpis ? (
             <p className="empty-state">{t('dashboard.loading')}</p>
           ) : (
+            <>
+              <div className="stats-grid kpi-grid">
+                <StatCard title={t('detail.kpiTotalFiles')} value={kpis.total_files} icon={<File size={18} />} />
+                <StatCard title={t('detail.kpiTotalFolders')} value={kpis.total_folders} icon={<Folder size={18} />} />
+                <StatCard title={t('detail.kpiPlannedObjects')} value={kpis.planned_objects_count} icon={<Boxes size={18} />} />
+                <StatCard title={t('detail.kpiObjectFolders')} value={kpis.object_folders_created} icon={<FolderCheck size={18} />} />
+                <StatCard title={t('detail.kpiMissingObjectFolders')} value={kpis.missing_object_folders} icon={<FolderPlus size={18} />} />
+                <StatCard title={t('detail.kpiAverageObjectProgress')} value={`${kpis.average_object_progress}%`} icon={<BarChart3 size={18} />} />
+                <StatCard title={t('detail.kpiProjectProgress')} value={`${kpis.project_progress}%`} icon={<Check size={18} />} />
+              </div>
+
+              <div className="charts-grid two-columns project-kpi-charts">
+                <ChartCard title={t('detail.objectProgressChart')}>
+                  {objectProgressData.length === 0 ? (
+                    <p className="empty-state project-chart-empty">{t('detail.noObjectFolders')}</p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart data={objectProgressData} layout="vertical" margin={{ left: 32, right: 16 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                        <XAxis type="number" domain={[0, 100]} />
+                        <YAxis type="category" dataKey="name" width={120} />
+                        <Tooltip />
+                        <Bar dataKey="progress" radius={[0, 8, 8, 0]} fill="#3867d6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </ChartCard>
+
+                <ChartCard title={t('detail.plannedVsCreatedChart')}>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={plannedCreatedData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="label" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                        {plannedCreatedData.map((_, index) => (
+                          <Cell key={index} fill={['#3867d6', '#20bf6b', '#f0932b'][index]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+
+                <ChartCard title={t('detail.filesPerObjectChart')}>
+                  {filesPerObjectData.length === 0 ? (
+                    <p className="empty-state project-chart-empty">{t('detail.noObjectFolders')}</p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart data={filesPerObjectData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="name" />
+                        <YAxis allowDecimals={false} />
+                        <Tooltip />
+                        <Bar dataKey="files" fill="#8854d0" radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </ChartCard>
+              </div>
+            </>
             <div className="stats-grid kpi-grid">
               <StatCard title={t('detail.kpiTotalFiles')} value={kpis.total_files} icon={<File size={18} />} />
               <StatCard title={t('detail.kpiTotalFolders')} value={kpis.total_folders} icon={<Folder size={18} />} />

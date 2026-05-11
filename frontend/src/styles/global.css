@@ -582,3 +582,6 @@ tr:hover td { background: #fafafa; }
 
 .dashboard-empty-card { margin-bottom: 18px; }
 .dashboard-empty-chart { display: flex; align-items: center; justify-content: center; height: 100%; min-height: 220px; padding: 0; }
+
+.project-kpi-charts { margin-top: 18px; }
+.project-chart-empty { display: flex; align-items: center; justify-content: center; height: 100%; min-height: 220px; padding: 0; }

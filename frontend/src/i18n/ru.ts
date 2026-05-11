@@ -138,6 +138,10 @@ const ru = {
     objectFolderShort: 'Объект',
     folderProgress: 'Прогресс папки',
     folderUpdateError: 'Не удалось обновить папку.',
+    objectProgressChart: 'Прогресс объектов',
+    plannedVsCreatedChart: 'Плановые и созданные объекты',
+    filesPerObjectChart: 'Файлы по папкам объектов',
+    noObjectFolders: 'Папок объектов пока нет.',
     download: 'Скачать',
   },
 
