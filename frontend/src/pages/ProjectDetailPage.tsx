@@ -41,7 +41,10 @@ export function ProjectDetailPage() {
 
   const projectId = Number(id)
   const isAdmin = user?.role === 'admin'
+  const isClient = user?.role === 'client'
   const isLead = project?.responsible_id === user?.id
+  const canManageProject = !isClient && (isAdmin || isLead)
+  const canManageFiles = !isClient
 
   async function load() {
     setLoading(true)
@@ -167,7 +170,7 @@ export function ProjectDetailPage() {
             <div className="progress-track" style={{ width: 120 }}>
               <div className="progress-bar" style={{ width: `${project.progress}%`, background: progressColor(project.progress) }} />
             </div>
-            {(isAdmin || isLead) && (
+            {canManageProject && (
               <button className="btn-secondary" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setEditOpen(true)}>
                 {t('projectForm.titleEdit')}
               </button>
@@ -196,20 +199,24 @@ export function ProjectDetailPage() {
           </div>
 
           <div style={{ display: 'flex', gap: 8 }}>
-            {!currentFolder && (
+            {canManageFiles && !currentFolder && (
               <button className="btn-secondary" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => { setNewFolderMode(true); setFolderError(null) }}>
                 <FolderPlus size={14} /> {t('detail.newFolder')}
               </button>
             )}
-            <button
-              className="btn-primary"
-              style={{ padding: '6px 14px', fontSize: 13 }}
-              disabled={uploading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Upload size={14} /> {uploading ? t('fileManager.uploading') : t('detail.upload')}
-            </button>
-            <input ref={fileInputRef} type="file" hidden onChange={handleUpload} />
+            {canManageFiles && (
+              <>
+                <button
+                  className="btn-primary"
+                  style={{ padding: '6px 14px', fontSize: 13 }}
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload size={14} /> {uploading ? t('fileManager.uploading') : t('detail.upload')}
+                </button>
+                <input ref={fileInputRef} type="file" hidden onChange={handleUpload} />
+              </>
+            )}
           </div>
         </div>
 
@@ -221,7 +228,7 @@ export function ProjectDetailPage() {
         )}
 
         {/* New folder inline form */}
-        {newFolderMode && (
+        {canManageFiles && newFolderMode && (
           <form className="new-folder-row" onSubmit={handleCreateFolder}>
             <Folder size={16} style={{ color: '#6b7280', flexShrink: 0 }} />
             <input
@@ -255,7 +262,7 @@ export function ProjectDetailPage() {
               <span className="fm-name">{folder.name}</span>
               <span className="fm-meta">{t('detail.fileCount', { count })}</span>
               <span className="fm-date">{new Date(folder.created_at).toLocaleDateString()}</span>
-              {(isAdmin || isLead) && (
+              {canManageProject && (
                 <button
                   className="icon-btn icon-btn-danger"
                   title={t('detail.deleteFolder')}
@@ -289,13 +296,15 @@ export function ProjectDetailPage() {
               <a href={downloadUrl(f.id)} download className="icon-btn" title={t('detail.download')}>
                 <Download size={14} />
               </a>
-              <button
-                className="icon-btn icon-btn-danger"
-                title={t('admin.tipDelete')}
-                onClick={() => handleDeleteFile(f)}
-              >
-                <Trash2 size={14} />
-              </button>
+              {canManageFiles && (
+                <button
+                  className="icon-btn icon-btn-danger"
+                  title={t('admin.tipDelete')}
+                  onClick={() => handleDeleteFile(f)}
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
           ))
         )}
