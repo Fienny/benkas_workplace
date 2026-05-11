@@ -39,6 +39,7 @@ const en = {
     byType: 'Projects by Type',
     byRegion: 'Projects by Region',
     monthlyActivity: 'Monthly Activity',
+    emptyScoped: 'No projects are available for your account yet.',
     activeProgress: 'Active Projects Progress',
   },
 
