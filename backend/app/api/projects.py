@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, require_admin, require_project_access
+from app.api.deps import get_current_user, require_admin, require_project_access, require_project_write_access
 from app.db.session import get_db
 from app.models.client_project_access import ClientProjectAccess
 from app.models.file import ProjectFile
@@ -98,7 +98,7 @@ def update_project(
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
-    require_project_access(current_user, project)
+    require_project_write_access(current_user, project)
 
     updates = payload.model_dump(exclude_unset=True)
     if 'code' in updates and updates['code'] != project.code:

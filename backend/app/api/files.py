@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, require_project_access
+from app.api.deps import get_current_user, require_project_access, require_project_write_access
 from app.db.session import get_db
 from app.models.file import ProjectFile
 from app.models.folder import ProjectFolder
@@ -50,7 +50,7 @@ def upload_file(
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
-    require_project_access(current_user, project)
+    require_project_write_access(current_user, project)
 
     if folder_id is not None:
         folder = db.get(ProjectFolder, folder_id)
@@ -104,7 +104,7 @@ def delete_file(file_id: int, current_user: User = Depends(get_current_user), db
     project = db.get(Project, record.project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
-    require_project_access(current_user, project)
+    require_project_write_access(current_user, project)
     is_project_lead = project.responsible_id == current_user.id
 
     if (

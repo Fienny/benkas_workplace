@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, require_project_access
+from app.api.deps import get_current_user, require_project_access, require_project_write_access
 from app.db.session import get_db
 from app.models.file import ProjectFile
 from app.models.folder import ProjectFolder
@@ -43,7 +43,7 @@ def create_folder(
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
-    require_project_access(current_user, project)
+    require_project_write_access(current_user, project)
     if db.scalar(select(ProjectFolder).where(
         ProjectFolder.project_id == project_id,
         ProjectFolder.name == payload.name,
@@ -67,7 +67,7 @@ def delete_folder(
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail='Project not found')
-    require_project_access(current_user, project)
+    require_project_write_access(current_user, project)
 
     folder = db.get(ProjectFolder, folder_id)
     if not folder or folder.project_id != project_id:

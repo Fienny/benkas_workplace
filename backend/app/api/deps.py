@@ -36,3 +36,12 @@ def require_project_access(user: User, project: Project) -> None:
     if not can_view_project(user, project):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Project access required')
 
+
+def require_project_write_access(user: User, project: Project) -> None:
+    require_project_access(user, project)
+    if user.role == UserRole.client:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Clients have read-only project access',
+        )
+
