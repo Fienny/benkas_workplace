@@ -261,16 +261,6 @@ export function ProjectDetailPage() {
             <p className="empty-state">{t('dashboard.loading')}</p>
           ) : (
             <>
-              <div className="stats-grid kpi-grid">
-                <StatCard title={t('detail.kpiTotalFiles')} value={kpis.total_files} icon={<File size={18} />} />
-                <StatCard title={t('detail.kpiTotalFolders')} value={kpis.total_folders} icon={<Folder size={18} />} />
-                <StatCard title={t('detail.kpiPlannedObjects')} value={kpis.planned_objects_count} icon={<Boxes size={18} />} />
-                <StatCard title={t('detail.kpiObjectFolders')} value={kpis.object_folders_created} icon={<FolderCheck size={18} />} />
-                <StatCard title={t('detail.kpiMissingObjectFolders')} value={kpis.missing_object_folders} icon={<FolderPlus size={18} />} />
-                <StatCard title={t('detail.kpiAverageObjectProgress')} value={`${kpis.average_object_progress}%`} icon={<BarChart3 size={18} />} />
-                <StatCard title={t('detail.kpiProjectProgress')} value={`${kpis.project_progress}%`} icon={<Check size={18} />} />
-              </div>
-
               <div className="charts-grid two-columns project-kpi-charts">
                 <ChartCard title={t('detail.objectProgressChart')}>
                   {objectProgressData.length === 0 ? (
@@ -319,17 +309,17 @@ export function ProjectDetailPage() {
                     </ResponsiveContainer>
                   )}
                 </ChartCard>
+                              <div className="stats-grid kpi-grid">
+                <StatCard title={t('detail.kpiTotalFiles')} value={kpis.total_files} icon={<File size={18} />} />
+                <StatCard title={t('detail.kpiTotalFolders')} value={kpis.total_folders} icon={<Folder size={18} />} />
+                <StatCard title={t('detail.kpiPlannedObjects')} value={kpis.planned_objects_count} icon={<Boxes size={18} />} />
+                <StatCard title={t('detail.kpiObjectFolders')} value={kpis.object_folders_created} icon={<FolderCheck size={18} />} />
+                <StatCard title={t('detail.kpiMissingObjectFolders')} value={kpis.missing_object_folders} icon={<FolderPlus size={18} />} />
+                <StatCard title={t('detail.kpiAverageObjectProgress')} value={`${kpis.average_object_progress}%`} icon={<BarChart3 size={18} />} />
+                <StatCard title={t('detail.kpiProjectProgress')} value={`${kpis.project_progress}%`} icon={<Check size={18} />} />
+              </div>
               </div>
             </>
-            <div className="stats-grid kpi-grid">
-              <StatCard title={t('detail.kpiTotalFiles')} value={kpis.total_files} icon={<File size={18} />} />
-              <StatCard title={t('detail.kpiTotalFolders')} value={kpis.total_folders} icon={<Folder size={18} />} />
-              <StatCard title={t('detail.kpiPlannedObjects')} value={kpis.planned_objects_count} icon={<Boxes size={18} />} />
-              <StatCard title={t('detail.kpiObjectFolders')} value={kpis.object_folders_created} icon={<FolderCheck size={18} />} />
-              <StatCard title={t('detail.kpiMissingObjectFolders')} value={kpis.missing_object_folders} icon={<FolderPlus size={18} />} />
-              <StatCard title={t('detail.kpiAverageObjectProgress')} value={`${kpis.average_object_progress}%`} icon={<BarChart3 size={18} />} />
-              <StatCard title={t('detail.kpiProjectProgress')} value={`${kpis.project_progress}%`} icon={<Check size={18} />} />
-            </div>
           )}
         </div>
       )}
