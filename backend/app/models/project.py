@@ -16,6 +16,7 @@ class Project(Base):
     region: Mapped[str] = mapped_column(String(50), index=True)
     status: Mapped[str] = mapped_column(String(50), default='active', index=True)
     progress: Mapped[int] = mapped_column(Integer, default=0)
+    planned_objects_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
@@ -26,3 +27,4 @@ class Project(Base):
     owner = relationship('User', foreign_keys=[owner_id], back_populates='projects')
     responsible = relationship('User', foreign_keys=[responsible_id])
     files = relationship('ProjectFile', back_populates='project', cascade='all, delete-orphan')
+    client_accesses = relationship('ClientProjectAccess', back_populates='project', cascade='all, delete-orphan')

@@ -14,6 +14,7 @@ export function ProjectsPage() {
   const { user } = useUser()
   const navigate = useNavigate()
   const isAdmin = user?.role === 'admin'
+  const isClient = user?.role === 'client'
   const [projects, setProjects] = useState<Project[]>([])
   const [formProject, setFormProject] = useState<Project | 'new' | null>(null)
 
@@ -54,9 +55,11 @@ export function ProjectsPage() {
           <h1>{t('projects.title')}</h1>
           <p>{t('projects.subtitle')}</p>
         </div>
-        <button className="btn-primary" onClick={() => setFormProject('new')}>
-          <Plus size={15} /> {t('projects.newProject')}
-        </button>
+        {!isClient && (
+          <button className="btn-primary" onClick={() => setFormProject('new')}>
+            <Plus size={15} /> {t('projects.newProject')}
+          </button>
+        )}
       </div>
 
       <div className="table-card">
@@ -76,7 +79,7 @@ export function ProjectsPage() {
                 <th>{t('projects.colProgress')}</th>
                 <th>{t('projects.colLead')}</th>
                 <th>{t('projects.colFiles')}</th>
-                <th></th>
+                {!isClient && <th></th>}
                 {isAdmin && <th></th>}
               </tr>
             </thead>
@@ -115,15 +118,17 @@ export function ProjectsPage() {
                       {project.file_count}
                     </span>
                   </td>
-                  <td>
-                    <button
-                      className="icon-btn"
-                      onClick={(e) => { e.stopPropagation(); setFormProject(project) }}
-                      title={t('projectForm.titleEdit')}
-                    >
-                      <Pencil size={14} />
-                    </button>
-                  </td>
+                  {!isClient && (
+                    <td>
+                      <button
+                        className="icon-btn"
+                        onClick={(e) => { e.stopPropagation(); setFormProject(project) }}
+                        title={t('projectForm.titleEdit')}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    </td>
+                  )}
                   {isAdmin && (
                     <td>
                       <button

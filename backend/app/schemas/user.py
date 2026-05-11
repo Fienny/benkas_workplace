@@ -30,3 +30,7 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = Field(None, min_length=2, max_length=255)
     username: Optional[str] = Field(None, min_length=2, max_length=100)
     password: Optional[str] = Field(None, min_length=4)
+
+
+class UserProjectAccessUpdate(BaseModel):
+    project_ids: list[int] = Field(default_factory=list)

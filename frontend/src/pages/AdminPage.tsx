@@ -1,36 +1,71 @@
 import { useEffect, useState } from 'react'
 import { Pencil, Plus, Trash2, ShieldCheck, ShieldOff, UserCheck, UserX } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { fetchUsers, createUser, updateUser, deleteUser, UserCreatePayload } from '../api/users'
+import {
+  fetchUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  fetchUserProjectAccess,
+  updateUserProjectAccess,
+  UserCreatePayload,
+  UserRole,
+} from '../api/users'
+import { fetchProjects } from '../api/projects'
 import { useUser } from '../contexts'
-import { User } from '../types'
+import { Project, User } from '../types'
 
 const BLANK: UserCreatePayload = { full_name: '', username: '', password: '', role: 'user' }
 
-interface EditForm { full_name: string; username: string; password: string }
+interface EditForm { full_name: string; username: string; password: string; role: UserRole }
+
+function selectedValues(select: HTMLSelectElement): number[] {
+  return Array.from(select.selectedOptions, (option) => Number(option.value)).filter(Number.isFinite)
+}
 
 export function AdminPage() {
   const { t } = useTranslation()
   const { user: me } = useUser()
   const [users, setUsers] = useState<User[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<UserCreatePayload>(BLANK)
+  const [formProjectIds, setFormProjectIds] = useState<number[]>([])
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [editUser, setEditUser] = useState<User | null>(null)
-  const [editForm, setEditForm] = useState<EditForm>({ full_name: '', username: '', password: '' })
+  const [editForm, setEditForm] = useState<EditForm>({ full_name: '', username: '', password: '', role: 'user' })
+  const [editProjectIds, setEditProjectIds] = useState<number[]>([])
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchUsers()
-      .then(setUsers)
+    Promise.all([
+      fetchUsers().then(setUsers),
+      fetchProjects().then(setProjects),
+    ])
+      .catch(() => {
+        setUsers([])
+        setProjects([])
+      })
       .finally(() => setLoading(false))
   }, [])
 
   function initials(name: string) {
     return name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+  }
+
+  function roleLabel(role: UserRole) {
+    if (role === 'admin') return t('admin.roleAdmin')
+    if (role === 'client') return t('admin.roleClient')
+    return t('admin.roleEngineer')
+  }
+
+  function resetCreateForm() {
+    setForm(BLANK)
+    setFormProjectIds([])
+    setFormError(null)
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -39,8 +74,11 @@ export function AdminPage() {
     setFormError(null)
     try {
       const created = await createUser(form)
+      if (created.role === 'client') {
+        await updateUserProjectAccess(created.id, formProjectIds)
+      }
       setUsers((prev) => [created, ...prev])
-      setForm(BLANK)
+      resetCreateForm()
       setShowForm(false)
     } catch (err: any) {
       const detail = err?.response?.data?.detail
@@ -57,13 +95,23 @@ export function AdminPage() {
 
   async function handleToggleRole(u: User) {
     const updated = await updateUser(u.id, { role: u.role === 'admin' ? 'user' : 'admin' })
+    if (updated.role !== 'client') await updateUserProjectAccess(updated.id, [])
     setUsers((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
   }
 
-  function openEdit(u: User) {
+  async function openEdit(u: User) {
     setEditUser(u)
-    setEditForm({ full_name: u.full_name, username: u.username, password: '' })
+    setEditForm({ full_name: u.full_name, username: u.username, password: '', role: u.role })
+    setEditProjectIds([])
     setEditError(null)
+    if (u.role === 'client') {
+      try {
+        setEditProjectIds(await fetchUserProjectAccess(u.id))
+      } catch (err: any) {
+        const detail = err?.response?.data?.detail
+        setEditError(typeof detail === 'string' ? detail : t('admin.errorProjectAccess'))
+      }
+    }
   }
 
   async function handleEdit(e: React.FormEvent) {
@@ -72,9 +120,14 @@ export function AdminPage() {
     setEditSaving(true)
     setEditError(null)
     try {
-      const payload: Record<string, string> = { full_name: editForm.full_name, username: editForm.username }
+      const payload: { full_name: string; username: string; password?: string; role: UserRole } = {
+        full_name: editForm.full_name,
+        username: editForm.username,
+        role: editForm.role,
+      }
       if (editForm.password) payload.password = editForm.password
       const updated = await updateUser(editUser.id, payload)
+      await updateUserProjectAccess(updated.id, updated.role === 'client' ? editProjectIds : [])
       setUsers((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
       setEditUser(null)
     } catch (err: any) {
@@ -91,6 +144,22 @@ export function AdminPage() {
     setUsers((prev) => prev.filter((x) => x.id !== u.id))
   }
 
+  const projectAccessSelect = (value: number[], onChange: (ids: number[]) => void) => (
+    <div className="form-field admin-project-access-field">
+      <label>{t('admin.fieldProjectAccess')}</label>
+      <select
+        multiple
+        value={value.map(String)}
+        onChange={(e) => onChange(selectedValues(e.currentTarget))}
+      >
+        {projects.map((project) => (
+          <option key={project.id} value={project.id}>{project.code} — {project.title}</option>
+        ))}
+      </select>
+      <small>{t('admin.projectAccessHint')}</small>
+    </div>
+  )
+
   return (
     <div className="page">
       <div className="page-head">
@@ -98,7 +167,7 @@ export function AdminPage() {
           <h1>{t('admin.title')}</h1>
           <p>{t('admin.subtitle')}</p>
         </div>
-        <button className="btn-primary" onClick={() => { setShowForm(true); setForm(BLANK); setFormError(null) }}>
+        <button className="btn-primary" onClick={() => { setShowForm(true); resetCreateForm() }}>
           <Plus size={15} /> {t('admin.newUser')}
         </button>
       </div>
@@ -141,12 +210,21 @@ export function AdminPage() {
               </div>
               <div className="form-field">
                 <label>{t('admin.fieldRole')}</label>
-                <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as 'admin' | 'user' })}>
+                <select
+                  value={form.role}
+                  onChange={(e) => {
+                    const role = e.target.value as UserRole
+                    setForm({ ...form, role })
+                    if (role !== 'client') setFormProjectIds([])
+                  }}
+                >
                   <option value="user">{t('admin.roleEngineer')}</option>
                   <option value="admin">{t('admin.roleAdmin')}</option>
+                  <option value="client">{t('admin.roleClient')}</option>
                 </select>
               </div>
             </div>
+            {form.role === 'client' && projectAccessSelect(formProjectIds, setFormProjectIds)}
             {formError && <p className="upload-error" style={{ margin: '8px 0 0' }}>{formError}</p>}
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <button type="submit" className="btn-primary" disabled={saving}>
@@ -185,7 +263,24 @@ export function AdminPage() {
                   placeholder={t('admin.placeholderNewPassword')}
                 />
               </div>
+              <div className="form-field">
+                <label>{t('admin.fieldRole')}</label>
+                <select
+                  value={editForm.role}
+                  onChange={(e) => {
+                    const role = e.target.value as UserRole
+                    setEditForm({ ...editForm, role })
+                    if (role !== 'client') setEditProjectIds([])
+                  }}
+                  disabled={editUser.id === me?.id}
+                >
+                  <option value="user">{t('admin.roleEngineer')}</option>
+                  <option value="admin">{t('admin.roleAdmin')}</option>
+                  <option value="client">{t('admin.roleClient')}</option>
+                </select>
+              </div>
             </div>
+            {editForm.role === 'client' && projectAccessSelect(editProjectIds, setEditProjectIds)}
             {editError && <p className="upload-error" style={{ margin: '8px 0 0' }}>{editError}</p>}
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <button type="submit" className="btn-primary" disabled={editSaving}>
@@ -235,8 +330,8 @@ export function AdminPage() {
                     </td>
                     <td><code className="code-cell">{u.username}</code></td>
                     <td>
-                      <span className={`status-chip ${u.role === 'admin' ? 'role-admin' : 'role-user'}`}>
-                        {u.role === 'admin' ? t('admin.roleAdmin') : t('admin.roleEngineer')}
+                      <span className={`status-chip role-${u.role}`}>
+                        {roleLabel(u.role)}
                       </span>
                     </td>
                     <td>
@@ -260,7 +355,7 @@ export function AdminPage() {
                           className="icon-btn"
                           title={u.role === 'admin' ? t('admin.tipDemote') : t('admin.tipPromote')}
                           onClick={() => handleToggleRole(u)}
-                          disabled={u.id === me?.id}
+                          disabled={u.id === me?.id || u.role === 'client'}
                         >
                           {u.role === 'admin' ? <ShieldOff size={14} /> : <ShieldCheck size={14} />}
                         </button>
