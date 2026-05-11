@@ -10,6 +10,7 @@ from app.db.base import Base
 class UserRole(str, Enum):
     admin = 'admin'
     user = 'user'
+    client = 'client'
 
 
 class User(Base):
@@ -25,3 +26,4 @@ class User(Base):
 
     projects = relationship('Project', foreign_keys='[Project.owner_id]', back_populates='owner')
     uploaded_files = relationship('ProjectFile', back_populates='uploaded_by_user')
+    client_project_accesses = relationship('ClientProjectAccess', back_populates='user', cascade='all, delete-orphan')
