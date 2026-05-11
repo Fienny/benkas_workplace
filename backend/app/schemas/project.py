@@ -10,6 +10,7 @@ class ProjectCreate(BaseModel):
     region: str = Field(min_length=2, max_length=50)
     status: str = Field(default='active', max_length=50)
     progress: int = Field(default=0, ge=0, le=100)
+    planned_objects_count: int = Field(default=0, ge=0)
     description: str | None = None
     due_date: date | None = None
     responsible_id: int | None = None
@@ -23,6 +24,7 @@ class ProjectUpdate(BaseModel):
     region: str | None = Field(default=None, min_length=2, max_length=50)
     status: str | None = Field(default=None, max_length=50)
     progress: int | None = Field(default=None, ge=0, le=100)
+    planned_objects_count: int | None = Field(default=None, ge=0)
     description: str | None = None
     due_date: date | None = None
     responsible_id: int | None = None
@@ -36,6 +38,7 @@ class ProjectResponse(BaseModel):
     region: str
     status: str
     progress: int
+    planned_objects_count: int
     description: str | None
     due_date: date | None
     owner_id: int
@@ -45,3 +48,13 @@ class ProjectResponse(BaseModel):
     file_count: int = 0
 
     model_config = {'from_attributes': True}
+
+
+class ProjectKpiResponse(BaseModel):
+    total_files: int
+    total_folders: int
+    planned_objects_count: int
+    object_folders_created: int
+    missing_object_folders: int
+    average_object_progress: float
+    project_progress: float
